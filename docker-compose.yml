@@ -1,0 +1,68 @@
+services:
+  
+  # STANDARDS INGESTION SERVICE
+  rag_storage_service:
+    container_name: ${STORAGE_CONTAINER_NAME}
+    build:
+      context: ./${STORAGE_DIR_NAME}
+      dockerfile: ${STORAGE_DOCKERFILE_NAME}
+      args:
+        CONTAINER_WORKDIR_NAME: ${CONTAINER_WORKDIR_NAME}
+        STORAGE_REQUIREMENTS_NAME: ${STORAGE_REQUIREMENTS_NAME}
+    image: ${STORAGE_IMAGE_NAME}:latest
+    environment:
+      - CONTAINER_WORKDIR_NAME=${CONTAINER_WORKDIR_NAME}
+      - STORAGE_DIR_NAME=${STORAGE_DIR_NAME}
+      - STANDARDS_DIR_NAME=${STANDARDS_DIR_NAME}
+      - INDEX_DIR_NAME=${INDEX_DIR_NAME}
+      - EMBEDDING_MODEL_NAME=${EMBEDDING_MODEL_NAME}
+      - PYTHONUNBUFFERED=${PYTHONUNBUFFERED}
+    volumes:
+      - ./${STORAGE_DIR_NAME}/${STANDARDS_DIR_NAME}:/${CONTAINER_WORKDIR_NAME}/${STANDARDS_DIR_NAME}:ro
+      - rag_index_volume:/${CONTAINER_WORKDIR_NAME}/${INDEX_DIR_NAME}
+    networks:
+      - ${DOCKER_NETWORK_NAME}
+    restart: unless-stopped
+  
+  # WEB APPLICATION SERVICE
+  rag_webapp_service:
+    container_name: ${WEBAPP_CONTAINER_NAME}
+    build:
+      context: ./${WEBAPP_DIR_NAME}
+      dockerfile: ${WEBAPP_DOCKERFILE_NAME}
+      args:
+        CONTAINER_WORKDIR_NAME: ${CONTAINER_WORKDIR_NAME}
+        WEBAPP_REQUIREMENTS_NAME: ${WEBAPP_REQUIREMENTS_NAME}
+    image: ${WEBAPP_IMAGE_NAME}:latest
+    ports:
+      - "${WEBAPP_PORT}:${WEBAPP_PORT}"
+    environment:
+      - WEBAPP_PORT=${WEBAPP_PORT}
+      - CONTAINER_WORKDIR_NAME=${CONTAINER_WORKDIR_NAME}
+      - INDEX_PATH=/${CONTAINER_WORKDIR_NAME}/${INDEX_DIR_NAME}
+      - EMBEDDING_MODEL_NAME=${EMBEDDING_MODEL_NAME}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL_NAME=${OPENAI_MODEL_NAME}
+      - OPENAI_TEMPERATURE=${OPENAI_TEMPERATURE}
+      - SIMILARITY_TOP_K=${SIMILARITY_TOP_K}
+      - DELIMITER_LENGTH=${DELIMITER_LENGTH}
+      - DEFAULT_INTERFACE_LANGUAGE=${DEFAULT_INTERFACE_LANGUAGE}
+      - PYTHONUNBUFFERED=${PYTHONUNBUFFERED}
+    volumes:
+      - rag_index_volume:/${CONTAINER_WORKDIR_NAME}/${INDEX_DIR_NAME}:ro
+    networks:
+      - ${DOCKER_NETWORK_NAME}
+    depends_on:
+      - rag_storage_service
+    restart: unless-stopped
+
+# VOLUME CONFIGURATION
+volumes:
+  rag_index_volume:
+    name: ${INDEX_VOLUME_NAME}
+
+# NETWORK CONFIGURATION
+networks:
+  rag_network:
+    name: ${DOCKER_NETWORK_NAME}
+    
