@@ -44,8 +44,10 @@ if ! docker info > /dev/null 2>&1; then
     fi
 fi
 
-# Clean up only project-specific containers and images
-echo -e "${BLUE}Cleaning up existing project containers and images...${NC}"
+# Clean up Docker space and project-specific containers/images
+echo -e "${BLUE}Cleaning up Docker space and existing project containers...${NC}"
+docker builder prune -f 2>/dev/null || true
+docker image prune -f 2>/dev/null || true
 docker-compose down --remove-orphans 2>/dev/null || true
 docker image rm ${STORAGE_IMAGE_NAME}:latest 2>/dev/null || true
 docker image rm ${WEBAPP_IMAGE_NAME}:latest 2>/dev/null || true
