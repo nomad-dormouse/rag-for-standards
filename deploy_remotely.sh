@@ -44,6 +44,13 @@ ssh -t -i "${SSH_KEY}" "${REMOTE_USER}@${REMOTE_HOST}" << EOF
     git clone "${REPO_URL}"
     cd "${REMOTE_DIR}"
     
+    echo -e "\n${BLUE}Copying .env file to project directory...${NC}"
+    cp .env .env
+    chmod 600 .env
+    
+    echo -e "\n${BLUE}Removing unnecessary files from remote server...${NC}"
+    rm -f deploy_remotely.sh
+    
     echo -e "\n${BLUE}Running deployment script on remote server...${NC}"
     chmod +x deploy.sh
     ./deploy.sh remotely
