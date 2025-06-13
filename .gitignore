@@ -21,6 +21,7 @@ pip-delete-this-directory.txt
 
 # Storage directories (contains processed data)
 storage/index/
+storage/standards/
 
 # Docker
 .dockerignore
