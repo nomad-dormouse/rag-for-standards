@@ -19,11 +19,6 @@ RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r ${STORAGE_REQUIREMENTS_NAME} && \
     rm -rf /root/.cache/pip
 
-# Create non-root user for security
-RUN useradd --create-home --shell /bin/bash app && \
-    chown -R app:app /${CONTAINER_WORKDIR_NAME}
-USER app
-
 # Create volume mount points
 VOLUME ["/${CONTAINER_WORKDIR_NAME}/index"]
 
