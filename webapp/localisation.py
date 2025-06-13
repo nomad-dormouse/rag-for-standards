@@ -26,7 +26,6 @@ TRANSLATIONS = {
         'tips_text': '- Choose language using buttons above: 🇬🇧 English or 🇺🇦 Ukrainian\n- Ask a questions in chosen language about Ukrainian technical standards and press Enter or click 🔎 Search button\n- Get two different answers: on the left — 📑 with access to those standards, and on the right — 💭 without access to them',
         # Prompt templates
         'system_prompt': 'You are a helpful assistant who answers questions about Ukrainian standards for technical documentation. You should respond in English.',
-        'translation_prompt': 'Translate the question from English to Ukrainian, formulate the answer in Ukrainian using context provided below, and then translate your answer to English. Provide only the answer in English.',
         'context_prompt': 'Given the following information:',
         'question_prompt': 'Question:',
         'answer_prompt': 'Answer:',
@@ -46,7 +45,6 @@ TRANSLATIONS = {
         'tips_text': '- Виберіть мову за допомогою кнопок вище: 🇬🇧 Англійську або 🇺🇦 Українську\n- Поставте запитання на вибраній мові про українські технічні стандарти і натисніть Enter або кнопку 🔎 Пошук\n- Отримайте дві різні відповіді: ліворуч — 📑 з доступом до цих стандартів, а праворуч — 💭 без доступу до них',
         # Prompt templates
         'system_prompt': 'Ти — корисний асистент, який відповідає на запитання про українські стандарти технічної документації.',
-        'translation_prompt': 'Якщо запитання поставлене НЕ українською мовою, переклади його на українську, сформуй відповідь українською мовою, а потім переклади свою відповідь на мову, якою було поставлене запитання. Відповідь повинна бути ВИКЛЮЧНО тією мовою, якою було поставлене запитання.',
         'context_prompt': 'Враховуючи наступну інформацію:',
         'question_prompt': 'Запитання:',
         'answer_prompt': 'Відповідь:',

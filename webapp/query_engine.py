@@ -32,7 +32,6 @@ def initialise_query_engine():
         'temperature': os.getenv("OPENAI_TEMPERATURE"),
         'similarity_top_k': int(os.getenv("SIMILARITY_TOP_K")),
         'system_prompt': t('system_prompt'),
-        'translation_prompt': t('translation_prompt'),
         'context_prompt': t('context_prompt'),
         'question_prompt': t('question_prompt'),
         'answer_prompt': t('answer_prompt'),
@@ -90,22 +89,6 @@ def get_answer(query: str) -> str:
         
         print("Retrieving context...")
         retrieved_nodes = _retriever.retrieve(query)
-        
-        print("\n" + "=" * _config['delimiter_length'])
-        print("RETRIEVED CHUNKS FROM DOCUMENTS")
-        print("=" * _config['delimiter_length'])
-        for i, node in enumerate(retrieved_nodes, 1):
-            source_file = node.metadata.get('file_name')
-            score = getattr(node, 'score', 0.0)
-            content_preview = node.text[:200] + "..." if len(node.text) > 200 else node.text
-            
-            print(f"CHUNK {i}:")
-            print(f"  📄 Source: {source_file}")
-            print(f"  📊 Similarity Score: {score:.4f}")
-            print(f"  📝 Content Preview: {content_preview}")
-            print("-" * _config['delimiter_length'] + "\n")
-        print("=" * _config['delimiter_length'] + "\n")
-        
         context_str = "\n\n".join([node.text for node in retrieved_nodes])
 
         print("\n" + "=" * _config['delimiter_length'])
