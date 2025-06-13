@@ -23,6 +23,9 @@ done
 echo -e "\n${BLUE}Starting remote deployment for RAG system for Ukrainian technical standards...${NC}"
 echo -e "\n${BLUE}Connecting to remote server: ${REMOTE_USER}@${REMOTE_HOST}${NC}"
 
+echo -e "\n${BLUE}Copying .env file to remote server...${NC}"
+scp -i "${SSH_KEY}" ".env" "${REMOTE_USER}@${REMOTE_HOST}:/tmp/.env"
+
 # Connect to the remote server and execute the deployment
 ssh -t -i "${SSH_KEY}" "${REMOTE_USER}@${REMOTE_HOST}" << EOF
     set -e
@@ -45,11 +48,12 @@ ssh -t -i "${SSH_KEY}" "${REMOTE_USER}@${REMOTE_HOST}" << EOF
     cd "${REMOTE_DIR}"
     
     echo -e "\n${BLUE}Copying .env file to project directory...${NC}"
-    cp .env .env
+    cp /tmp/.env .env
     chmod 600 .env
     
     echo -e "\n${BLUE}Removing unnecessary files from remote server...${NC}"
     rm -f deploy_remotely.sh
+    rm -f /tmp/.env
     
     echo -e "\n${BLUE}Running deployment script on remote server...${NC}"
     chmod +x deploy.sh
