@@ -1,0 +1,31 @@
+# Base image
+FROM python:3.11-slim
+
+# Copy files from local parent directory to container's working directory
+ARG CONTAINER_WORKDIR_NAME
+WORKDIR /${CONTAINER_WORKDIR_NAME}
+COPY . .
+
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+ARG STORAGE_REQUIREMENTS_NAME
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r ${STORAGE_REQUIREMENTS_NAME} && \
+    rm -rf /root/.cache/pip
+
+# Create non-root user for security
+RUN useradd --create-home --shell /bin/bash app && \
+    chown -R app:app /${CONTAINER_WORKDIR_NAME}
+USER app
+
+# Create volume mount points
+VOLUME ["/${CONTAINER_WORKDIR_NAME}/index"]
+
+# Run standards ingestion
+CMD ["python", "ingest.py"]
