@@ -7,14 +7,13 @@ Loads documents, creates embeddings, and builds searchable index.
 import os
 from dotenv import load_dotenv
 from llama_index.core import SimpleDirectoryReader, VectorStoreIndex, Settings
-from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
 def main():
     load_dotenv()
     standards_dir = os.getenv("STANDARDS_DIR_NAME")
     index_dir = os.getenv("INDEX_DIR_NAME")
     embedding_model_name = os.getenv("EMBEDDING_MODEL_NAME")
-    openai_api_key = os.getenv("OPENAI_API_KEY")
     
     print(f"Loading documents from: {standards_dir}...")
     try:
@@ -32,15 +31,12 @@ def main():
         print("No documents were loaded successfully!")
         return
     
-    print(f"Setting up OpenAI embeddings with model: {embedding_model_name}...")
+    print(f"Setting up embedding model: {embedding_model_name}...")
     try:
-        Settings.embed_model = OpenAIEmbedding(
-            api_key=openai_api_key,
-            model=embedding_model_name
-        )
-        print("OpenAI embedding model configured successfully!")
+        Settings.embed_model = HuggingFaceEmbedding(model_name=embedding_model_name)
+        print("Embedding model loaded successfully!")
     except Exception as e:
-        print(f"Error setting up OpenAI embeddings: {e}")
+        print(f"Error loading embedding model: {e}")
         raise
     
     print("Building index...")
