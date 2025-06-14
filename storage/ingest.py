@@ -16,7 +16,6 @@ def main():
     embedding_model_name = os.getenv("EMBEDDING_MODEL_NAME")
     
     print(f"Loading documents from: {standards_dir}...")
-    
     try:
         documents = SimpleDirectoryReader(
             input_dir=standards_dir,
@@ -28,13 +27,16 @@ def main():
     except Exception as e:
         print(f"Error loading documents: {e}")
         return
-    
     if not documents:
         print("No documents were loaded successfully!")
         return
     
     print(f"Setting up embedding model: {embedding_model_name}...")
-    Settings.embed_model = HuggingFaceEmbedding(model_name=embedding_model_name)
+    try:
+        Settings.embed_model = HuggingFaceEmbedding(model_name=embedding_model_name)
+        print("Embedding model loaded successfully!")
+    except Exception as e:
+        print(f"Error loading primary embedding model: {e}")
     
     print("Building index...")
     index = VectorStoreIndex.from_documents(documents)
