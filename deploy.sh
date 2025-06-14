@@ -89,5 +89,3 @@ fi
 
 echo -e "${GREEN}Deployment completed successfully!${NC}"
 echo -e "${YELLOW}The web application is available at: http://${HOST}:${WEBAPP_PORT}${NC}"
-echo -e "${BLUE}To stop the application, run: docker-compose down${NC}"
-echo -e "${BLUE}To view logs, run: docker-compose logs -f ${WEBAPP_SERVICE_NAME}${NC}"
