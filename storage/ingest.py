@@ -36,7 +36,12 @@ def main():
         Settings.embed_model = HuggingFaceEmbedding(model_name=embedding_model_name)
         print("Embedding model loaded successfully!")
     except Exception as e:
-        print(f"Error loading primary embedding model: {e}")
+        print(f"DETAILED ERROR loading embedding model: {e}")
+        print(f"Error type: {type(e).__name__}")
+        import traceback
+        print("Full traceback:")
+        traceback.print_exc()
+        raise
     
     print("Building index...")
     index = VectorStoreIndex.from_documents(documents)
