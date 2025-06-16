@@ -55,13 +55,6 @@ echo -e "${BLUE}Performing targeted Docker cleanup...${NC}"
 docker image prune -f 2>/dev/null || true
 docker builder prune -f 2>/dev/null || true
 docker volume prune -f 2>/dev/null || true
-if [[ "$1" == "remotely" ]]; then
-    echo -e "${BLUE}Performing additional system cleanup...${NC}"
-    sudo find /tmp -type f -mtime +1 -delete 2>/dev/null || true
-    sudo find /var/tmp -type f -mtime +1 -delete 2>/dev/null || true
-    sudo find /var/log -type f -name "*.log" -mtime +7 -delete 2>/dev/null || true
-    sudo apt-get autoclean 2>/dev/null || true
-fi
 echo -e "${BLUE}Disk space after cleanup:${NC}"
 df -h
 

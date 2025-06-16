@@ -33,15 +33,16 @@ ssh -t -i "${SSH_KEY}" "${REMOTE_USER}@${REMOTE_HOST}" << EOF
 
     echo -e "${GREEN}Connected to remote server ${REMOTE_HOST}${NC}"
     
-    echo -e "\n${BLUE}Checking for system updates...${NC}"
-    sudo apt-get update
-    echo -e "\n${BLUE}Upgrading system packages...${NC}"
-    sudo apt-get upgrade -y
-    echo -e "\n${BLUE}Removing unnecessary packages...${NC}"
-    sudo apt-get autoremove -y
-    echo -e "\n${BLUE}Cleaning package cache...${NC}"
-    sudo apt-get clean
+    echo -e "\n${BLUE}Updating system packages...${NC}"
+    sudo apt-get update && \
+    sudo apt-get upgrade -y && \
+    sudo apt-get autoremove -y && \
+    sudo apt-get autoclean
     
+    echo -e "\n${BLUE}Cleaning temporary and log files...${NC}"
+    sudo find /tmp /var/tmp -type f -mtime +1 -delete 2>/dev/null || true
+    sudo find /var/log -type f -name "*.log" -mtime +7 -delete 2>/dev/null || true
+
     echo -e "\n${BLUE}Cloning repository from ${REPO_URL}...${NC}"
     rm -rf "${REMOTE_DIR}"
     git clone "${REPO_URL}"
@@ -51,11 +52,11 @@ ssh -t -i "${SSH_KEY}" "${REMOTE_USER}@${REMOTE_HOST}" << EOF
     cp /tmp/.env .env
     chmod 600 .env
     
-    echo -e "\n${BLUE}Removing unnecessary files from remote server...${NC}"
-    rm -f deploy_remotely.sh
-    rm -f /tmp/.env
-    
     echo -e "\n${BLUE}Running deployment script on remote server...${NC}"
     chmod +x deploy.sh
     ./deploy.sh remotely
+    
+    echo -e "\n${BLUE}Removing standards folder and deployment files...${NC}"
+    rm -rf storage/standards
+    rm -f /tmp/.env
 EOF
