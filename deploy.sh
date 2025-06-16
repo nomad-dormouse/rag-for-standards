@@ -87,5 +87,4 @@ if [[ "$1" == "remotely" ]]; then
     HOST=${REMOTE_HOST:-localhost}
 fi
 
-echo -e "${GREEN}Deployment completed successfully!${NC}"
 echo -e "${YELLOW}The web application is available at: http://${HOST}:${WEBAPP_PORT}${NC}"
