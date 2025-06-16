@@ -44,7 +44,7 @@ if ! docker info > /dev/null 2>&1; then
     fi
 fi
 
-# Check disk space before cleanup
+# Disk space cleanup
 echo -e "${BLUE}Checking disk space before cleanup...${NC}"
 df -h
 echo -e "${BLUE}Cleaning up existing project containers...${NC}"
