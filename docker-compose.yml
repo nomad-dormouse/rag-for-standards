@@ -3,7 +3,6 @@ services:
   # STANDARDS INGESTION SERVICE
   rag_storage_service:
     container_name: ${STORAGE_CONTAINER_NAME}
-    platform: linux/amd64
     build:
       context: ./${STORAGE_DIR_NAME}
       dockerfile: ${STORAGE_DOCKERFILE_NAME}
@@ -28,7 +27,6 @@ services:
   # WEB APPLICATION SERVICE
   rag_webapp_service:
     container_name: ${WEBAPP_CONTAINER_NAME}
-    platform: linux/amd64
     build:
       context: ./${WEBAPP_DIR_NAME}
       dockerfile: ${WEBAPP_DOCKERFILE_NAME}
