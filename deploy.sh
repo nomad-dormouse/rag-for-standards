@@ -44,13 +44,26 @@ if ! docker info > /dev/null 2>&1; then
     fi
 fi
 
-# Clean up Docker space and project-specific containers/images
-echo -e "${BLUE}Cleaning up Docker space and existing project containers...${NC}"
-docker builder prune -f 2>/dev/null || true
-docker image prune -f 2>/dev/null || true
+# Check disk space before cleanup
+echo -e "${BLUE}Checking disk space before cleanup...${NC}"
+df -h
+echo -e "${BLUE}Cleaning up existing project containers...${NC}"
 docker-compose down --remove-orphans 2>/dev/null || true
 docker image rm ${STORAGE_IMAGE_NAME}:latest 2>/dev/null || true
 docker image rm ${WEBAPP_IMAGE_NAME}:latest 2>/dev/null || true
+echo -e "${BLUE}Performing targeted Docker cleanup...${NC}"
+docker image prune -f 2>/dev/null || true
+docker builder prune -f 2>/dev/null || true
+docker volume prune -f 2>/dev/null || true
+if [[ "$1" == "remotely" ]]; then
+    echo -e "${BLUE}Performing additional system cleanup...${NC}"
+    sudo find /tmp -type f -mtime +1 -delete 2>/dev/null || true
+    sudo find /var/tmp -type f -mtime +1 -delete 2>/dev/null || true
+    sudo find /var/log -type f -name "*.log" -mtime +7 -delete 2>/dev/null || true
+    sudo apt-get autoclean 2>/dev/null || true
+fi
+echo -e "${BLUE}Disk space after cleanup:${NC}"
+df -h
 
 # First, build, run and remove the standards ingestion service
 echo -e "${BLUE}Building and running standards ingestion service...${NC}"
