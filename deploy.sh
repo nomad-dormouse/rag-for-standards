@@ -45,8 +45,6 @@ if ! docker info > /dev/null 2>&1; then
 fi
 
 # Disk space cleanup
-echo -e "${BLUE}Checking disk space before cleanup...${NC}"
-df -h
 echo -e "${BLUE}Cleaning up existing project containers...${NC}"
 docker-compose down --remove-orphans 2>/dev/null || true
 docker image rm ${STORAGE_IMAGE_NAME}:latest 2>/dev/null || true
@@ -55,8 +53,6 @@ echo -e "${BLUE}Performing targeted Docker cleanup...${NC}"
 docker image prune -f 2>/dev/null || true
 docker builder prune -f 2>/dev/null || true
 docker volume prune -f 2>/dev/null || true
-echo -e "${BLUE}Disk space after cleanup:${NC}"
-df -h
 
 # First, build, run and remove the standards ingestion service
 echo -e "${BLUE}Building and running standards ingestion service...${NC}"
