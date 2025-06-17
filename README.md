@@ -1,6 +1,6 @@
 # RAG for Ukrainian Technical Standards
 
-A Retrieval-Augmented Generation (RAG) system for searching and answering questions about Ukrainian technical documentation standards using Docker containerization.
+A Retrieval-Augmented Generation (RAG) system for searching and answering questions about Ukrainian technical documentation standards using Docker containerisation.
 
 ## 🚀 Quick Start
 
@@ -22,12 +22,12 @@ cd rag-for-standards
 
 ```
 rag-for-standards/
-├── storage/                    # Document processing service
+├── rag_storage/               # Document processing service
 │   ├── standards/             # Ukrainian technical standards (PDFs)
 │   ├── dockerfile_storage     # Docker image for document ingestion
 │   ├── ingest.py             # Document processing script
 │   └── requirements_storage.txt
-├── webapp/                    # Web application service
+├── rag_webapp/                # Web application service
 │   ├── dockerfile_webapp     # Docker image for web interface
 │   ├── webapp.py            # Streamlit application
 │   ├── query_engine.py      # RAG query processing
@@ -81,7 +81,8 @@ cp .env.template .env
 ## 📊 Features
 
 - **Multi-language Support**: Ukrainian, English, Russian document processing
-- **Docker Containerization**: Isolated services with automatic scaling
+- **Docker Containerisation**: Isolated services with optimised architecture
+- **One-time Ingestion**: Storage service runs once to build index, then webapp serves queries
 - **Remote Deployment**: One-command deployment to remote servers
 - **RAG Pipeline**: Advanced retrieval with similarity search
 - **Web Interface**: User-friendly Streamlit application
