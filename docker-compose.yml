@@ -1,6 +1,6 @@
 services:
   
-  # STANDARDS INGESTION SERVICE
+  # STANDARDS INGESTION SERVICE (one-time job)
   rag_storage_service:
     container_name: ${STORAGE_CONTAINER_NAME}
     build:
@@ -22,6 +22,8 @@ services:
       - rag_index_volume:/${CONTAINER_WORKDIR_NAME}/${INDEX_DIR_NAME}
     networks:
       - ${DOCKER_NETWORK_NAME}
+    profiles:
+      - ingestion
   
   # WEB APPLICATION SERVICE
   rag_webapp_service:
@@ -52,8 +54,6 @@ services:
       - rag_index_volume:/${CONTAINER_WORKDIR_NAME}/${INDEX_DIR_NAME}
     networks:
       - ${DOCKER_NETWORK_NAME}
-    depends_on:
-      - rag_storage_service
     restart: unless-stopped
 
 # VOLUME CONFIGURATION

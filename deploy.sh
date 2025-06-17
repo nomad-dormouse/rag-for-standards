@@ -44,14 +44,20 @@ if ! docker info > /dev/null 2>&1; then
     fi
 fi
 
-# Cleanup existing containers
+# Comprehensive Docker cleanup
 echo -e "${BLUE}Cleaning up existing project containers...${NC}"
 docker-compose down --remove-orphans 2>/dev/null || true
+docker image rm ${STORAGE_IMAGE_NAME}:latest 2>/dev/null || true
+docker image rm ${WEBAPP_IMAGE_NAME}:latest 2>/dev/null || true
+echo -e "${BLUE}Performing Docker system cleanup...${NC}"
+docker image prune -f 2>/dev/null || true
+docker builder prune -f 2>/dev/null || true
+docker volume prune -f 2>/dev/null || true
 
-# First, build, run and remove the standards ingestion service
-echo -e "${BLUE}Building and running standards ingestion service...${NC}"
-docker-compose build ${STORAGE_SERVICE_NAME}
-docker-compose run --rm ${STORAGE_SERVICE_NAME}
+# Run one-time standards ingestion service
+echo -e "${BLUE}Building and running standards ingestion service (one-time job)...${NC}"
+docker-compose --profile ingestion build ${STORAGE_SERVICE_NAME}
+docker-compose --profile ingestion run --rm ${STORAGE_SERVICE_NAME}
 if [ $? -ne 0 ]; then
     echo -e "${RED}Standards ingestion failed${NC}"
     exit 1
