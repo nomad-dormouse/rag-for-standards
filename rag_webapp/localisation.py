@@ -14,18 +14,18 @@ load_dotenv()
 TRANSLATIONS = {
     'en': {
         # Webapp interface
-        'app_title': '🔍 Search through Ukrainian technical standards using AI',
+        'app_title': 'Search through Ukrainian technical standards using AI',
         'query_input_label': 'Enter your question',
         'query_input_placeholder': 'Enter your question here. For example: "What are the ergonomic requirements for workplace design?"',
-        'search_button': '🔍 Search',
-        'rag_response_header': '📑 Response WITH access to standards',
-        'direct_response_header': '💭 Response WITHOUT access to standards',
+        'search_button': 'Search',
+        'rag_response_header': 'Response WITH access to standards',
+        'direct_response_header': 'Response WITHOUT access to standards',
         'no_query_message': 'Please enter a question to search',
         'processing_message': 'Processing your query...',
-        'tips_header': '❓ How to use',
+        'tips_header': 'How to use',
         'tips_text': '- Choose language using buttons above: 🇬🇧 English or 🇺🇦 Ukrainian\n- Ask a questions in chosen language about Ukrainian technical standards and press Enter or click 🔎 Search button\n- Get two different answers: on the left — 📑 with access to those standards, and on the right — 💭 without access to them',
         # Sources display
-        'retrieved_sources_header': 'Retrieved sources',
+        'retrieved_sources_header': 'Retrieved chunks of standards',
         'source_label': 'SOURCE',
         'similarity_label': 'similarity',
         'file_label': 'File',
@@ -43,18 +43,18 @@ TRANSLATIONS = {
     
     'uk': {
         # Webapp interface
-        'app_title': '🔍 Пошук по українських технічних стандартах за допомогою ШІ',
+        'app_title': 'Пошук по українських технічних стандартах за допомогою ШІ',
         'query_input_label': 'Введіть ваше запитання',
         'query_input_placeholder': 'Введіть ваше запитання тут. Наприклад: "Які ергономічні вимоги до організації робочого місця?"',
-        'search_button': '🔍 Пошук',
-        'rag_response_header': '📑 Відповідь З доступом до стандартів',
-        'direct_response_header': '💭 Відповідь БЕЗ доступу до стандартів',
+        'search_button': 'Пошук',
+        'rag_response_header': 'Відповідь З доступом до стандартів',
+        'direct_response_header': 'Відповідь БЕЗ доступу до стандартів',
         'no_query_message': 'Будь ласка, введіть запитання для пошуку',
         'processing_message': 'Обробка вашого запиту...',
-        'tips_header': '❓ Як користуватися',
+        'tips_header': 'Як користуватися',
         'tips_text': '- Виберіть мову за допомогою кнопок вище: 🇬🇧 Англійську або 🇺🇦 Українську\n- Поставте запитання на вибраній мові про українські технічні стандарти і натисніть Enter або кнопку 🔎 Пошук\n- Отримайте дві різні відповіді: ліворуч — 📑 з доступом до цих стандартів, а праворуч — 💭 без доступу до них',
         # Sources display
-        'retrieved_sources_header': 'Знайдені джерела',
+        'retrieved_sources_header': 'Використані фрагменти стандартів',
         'source_label': 'ДЖЕРЕЛО',
         'similarity_label': 'схожість',
         'file_label': 'Файл',
