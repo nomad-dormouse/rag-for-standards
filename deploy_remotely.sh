@@ -32,16 +32,18 @@ ssh -t -i "${SSH_KEY}" "${REMOTE_USER}@${REMOTE_HOST}" << EOF
 
     echo -e "${GREEN}Connected to remote server ${REMOTE_HOST}${NC}"
     
-    echo -e "\n${BLUE}Updating system packages...${NC}"
+    echo -e "\n${BLUE}Updating system packages and installing Git LFS...${NC}"
     sudo apt-get update && \
     sudo apt-get upgrade -y && \
+    sudo apt-get install -y git-lfs && \
     sudo apt-get autoremove -y && \
     sudo apt-get autoclean
-
-    echo -e "\n${BLUE}Cloning repository from ${REPO_URL}...${NC}"
+    
+    echo -e "\n${BLUE}Cloning repository and pulling LFS files from ${REPO_URL}...${NC}"
     rm -rf "${REMOTE_DIR}"
-    git clone "${REPO_URL}"
-    cd "${REMOTE_DIR}"
+    git clone "${REPO_URL}" && \
+    cd "${REMOTE_DIR}" && \
+    git lfs pull
     
     echo -e "\n${BLUE}Copying .env file to project directory...${NC}"
     cp /tmp/.env .env
