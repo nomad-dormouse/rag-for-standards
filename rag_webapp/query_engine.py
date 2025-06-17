@@ -76,8 +76,8 @@ def reset_query_engine():
     _config = None
     print("Query engine reset. Will reinitialise on next query.")
 
-def get_answer(query: str) -> str:
-    """Get RAG answer using pre-initialised components"""
+def get_answer_with_RAG(query: str) -> dict:
+    """Get RAG answer with retrieved source chunks"""
     global _query_engine, _retriever, _config
     
     try:
@@ -107,10 +107,30 @@ def get_answer(query: str) -> str:
         response = _query_engine.query(query)
         
         print("Got RAG response")
-        return str(response)
+        
+        # Format retrieved chunks for display
+        sources = []
+        for i, node in enumerate(retrieved_nodes):
+            source_info = {
+                "chunk_id": i + 1,
+                "text": node.text,
+                "score": getattr(node, 'score', 0.0),
+                "metadata": node.metadata if hasattr(node, 'metadata') else {}
+            }
+            sources.append(source_info)
+
+        return {
+            "answer": str(response),
+            "sources": sources,
+            "total_sources": len(sources)
+        }
         
     except Exception as e:
-        return f"Error: {str(e)}"
+        return {
+            "answer": f"Error: {str(e)}",
+            "sources": [],
+            "total_sources": 0
+        }
 
 def get_answer_without_RAG(query: str) -> str:
     """Get direct LLM answer using pre-initialised components (no RAG)"""

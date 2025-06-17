@@ -24,6 +24,16 @@ TRANSLATIONS = {
         'processing_message': 'Processing your query...',
         'tips_header': '❓ How to use',
         'tips_text': '- Choose language using buttons above: 🇬🇧 English or 🇺🇦 Ukrainian\n- Ask a questions in chosen language about Ukrainian technical standards and press Enter or click 🔎 Search button\n- Get two different answers: on the left — 📑 with access to those standards, and on the right — 💭 without access to them',
+        # Sources display
+        'retrieved_sources_header': 'Retrieved sources',
+        'source_label': 'SOURCE',
+        'similarity_label': 'similarity',
+        'file_label': 'File',
+        'page_label': 'Page',
+        'content_label': 'Content',
+        'no_text_content_warning': 'No text content available in this chunk',
+        'no_sources_warning': 'No sources retrieved for this query',
+        'all_sources_label': 'All retrieved sources',
         # Prompt templates
         'system_prompt': 'You are a helpful assistant who answers questions about Ukrainian standards for technical documentation. You should respond in English.',
         'context_prompt': 'Given the following information:',
@@ -43,6 +53,16 @@ TRANSLATIONS = {
         'processing_message': 'Обробка вашого запиту...',
         'tips_header': '❓ Як користуватися',
         'tips_text': '- Виберіть мову за допомогою кнопок вище: 🇬🇧 Англійську або 🇺🇦 Українську\n- Поставте запитання на вибраній мові про українські технічні стандарти і натисніть Enter або кнопку 🔎 Пошук\n- Отримайте дві різні відповіді: ліворуч — 📑 з доступом до цих стандартів, а праворуч — 💭 без доступу до них',
+        # Sources display
+        'retrieved_sources_header': 'Знайдені джерела',
+        'source_label': 'ДЖЕРЕЛО',
+        'similarity_label': 'схожість',
+        'file_label': 'Файл',
+        'page_label': 'Сторінка',
+        'content_label': 'Зміст',
+        'no_text_content_warning': 'У цьому фрагменті немає текстового контенту',
+        'no_sources_warning': 'Для цього запиту не знайдено джерел',
+        'all_sources_label': 'Всі знайдені джерела',
         # Prompt templates
         'system_prompt': 'Ти — корисний асистент, який відповідає на запитання про українські стандарти технічної документації.',
         'context_prompt': 'Враховуючи наступну інформацію:',

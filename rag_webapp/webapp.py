@@ -1,5 +1,6 @@
 import streamlit as st
-from query_engine import get_answer, get_answer_without_RAG, reset_query_engine
+import os
+from query_engine import get_answer_with_RAG, get_answer_without_RAG, reset_query_engine
 from localisation import t, set_language, get_language, get_language_names
 
 # Configure page
@@ -49,16 +50,48 @@ with st.form("search_form"):
 
 # Process query when button is clicked or Enter is pressed
 if search_clicked and query.strip():
+    # Get RAG answer with sources
+    with st.spinner(t('processing_message')):
+        rag_result = get_answer_with_RAG(query)
+        direct_answer = get_answer_without_RAG(query)
+    
+    # Display answers in columns
     answer_col1, answer_col2 = st.columns(2)
     with answer_col1:
         st.subheader(t('rag_response_header'))
-        with st.spinner(t('processing_message')):
-            rag_answer = get_answer(query)
-        st.success(rag_answer)
+        st.success(rag_result["answer"])
+        
+        # Display retrieved sources below RAG response
+        if rag_result["total_sources"] > 0:
+            st.subheader(f"📚 {t('retrieved_sources_header')}")
+            delimiter_length = int(os.getenv("DELIMITER_LENGTH"))
+            combined_sources = ""
+            for source in rag_result["sources"]:
+                combined_sources += f"\n📄 {t('source_label')} {source['chunk_id']} ({t('similarity_label')}: {source['score']:.3f})\n"
+                if source["metadata"]:
+                    metadata = source["metadata"]
+                    if "file_name" in metadata:
+                        combined_sources += f"📁 {t('file_label')}: {metadata['file_name']}\n"
+                    if "page_label" in metadata:
+                        combined_sources += f"📄 {t('page_label')}: {metadata['page_label']}\n"
+                if source["text"].strip():
+                    combined_sources += f"\n📝 {t('content_label')}:\n{source['text']}\n"
+                else:
+                    combined_sources += f"⚠️ {t('no_text_content_warning')}\n"
+                combined_sources += "\n" + "=" * delimiter_length + "\n"
+            st.text_area(
+                label=t('all_sources_label'),
+                value=combined_sources,
+                height=400,
+                disabled=True,
+                label_visibility="collapsed",
+                key="all_sources"
+            )
+        else:
+            st.warning(t('no_sources_warning'))
+            
     with answer_col2:
         st.subheader(t('direct_response_header'))
-        with st.spinner(t('processing_message')):
-            direct_answer = get_answer_without_RAG(query)
         st.info(direct_answer)
 
 elif search_clicked and not query.strip():
