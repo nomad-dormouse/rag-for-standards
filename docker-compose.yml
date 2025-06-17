@@ -51,7 +51,7 @@ services:
       - PYTHONUNBUFFERED=${PYTHONUNBUFFERED}
     volumes:
       - ./${WEBAPP_DIR_NAME}:/${CONTAINER_WORKDIR_NAME}
-      - rag_index_volume:/${CONTAINER_WORKDIR_NAME}/${INDEX_DIR_NAME}
+      - rag_index_volume:/${CONTAINER_WORKDIR_NAME}/${INDEX_DIR_NAME}:ro
     networks:
       - ${DOCKER_NETWORK_NAME}
     restart: unless-stopped
