@@ -5,10 +5,7 @@ Loads documents, creates embeddings, and builds searchable index.
 """
 
 import os
-import logging
-import time
 from dotenv import load_dotenv
-from tqdm import tqdm
 from llama_index.core import SimpleDirectoryReader, VectorStoreIndex, Settings
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
@@ -43,9 +40,8 @@ def main():
         raise
     
     print(f"Building index for {len(documents)} documents...")
-    logging.basicConfig(level=logging.DEBUG)
     try:
-        index = VectorStoreIndex.from_documents(tqdm(documents))
+        index = VectorStoreIndex.from_documents(documents)
         print("Index building completed!")
     except Exception as e:
         print(f"Error building index: {e}")

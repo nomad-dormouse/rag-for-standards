@@ -28,4 +28,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:${WEBAPP_PORT}/_stcore/health || exit 1
 
 # Run the Streamlit app
-CMD streamlit run webapp.py --server.address=0.0.0.0 --server.port=$WEBAPP_PORT
+CMD ["sh", "-c", "streamlit run webapp.py --server.address=0.0.0.0 --server.port=${WEBAPP_PORT}"]

@@ -37,10 +37,6 @@ ssh -t -i "${SSH_KEY}" "${REMOTE_USER}@${REMOTE_HOST}" << EOF
     sudo apt-get upgrade -y && \
     sudo apt-get autoremove -y && \
     sudo apt-get autoclean
-    
-    echo -e "\n${BLUE}Cleaning temporary and log files...${NC}"
-    sudo find /tmp /var/tmp -type f -mtime +1 -delete 2>/dev/null || true
-    sudo find /var/log -type f -name "*.log" -mtime +7 -delete 2>/dev/null || true
 
     echo -e "\n${BLUE}Cloning repository from ${REPO_URL}...${NC}"
     rm -rf "${REMOTE_DIR}"
