@@ -67,7 +67,8 @@ if search_clicked and query.strip():
             delimiter_length = int(os.getenv("DELIMITER_LENGTH"))
             combined_sources = ""
             for source in rag_result["sources"]:
-                combined_sources += f"\n📄 {t('source_label')} {source['chunk_id']} ({t('similarity_label')}: {source['score']:.3f})\n"
+                combined_sources += "=" * delimiter_length + "\n\n"
+                combined_sources += f"📄 {t('source_label')} {source['chunk_id']} ({t('similarity_label')}: {source['score']:.3f})\n"
                 if source["metadata"]:
                     metadata = source["metadata"]
                     if "file_name" in metadata:
@@ -75,10 +76,9 @@ if search_clicked and query.strip():
                     if "page_label" in metadata:
                         combined_sources += f"📄 {t('page_label')}: {metadata['page_label']}\n"
                 if source["text"].strip():
-                    combined_sources += f"\n📝 {t('content_label')}:\n{source['text']}\n"
+                    combined_sources += f"\n📝 {t('content_label')}:\n{source['text']}\n\n"
                 else:
-                    combined_sources += f"⚠️ {t('no_text_content_warning')}\n"
-                combined_sources += "\n" + "=" * delimiter_length + "\n"
+                    combined_sources += f"⚠️ {t('no_text_content_warning')}\n\n"
             st.text_area(
                 label=t('all_sources_label'),
                 value=combined_sources,
