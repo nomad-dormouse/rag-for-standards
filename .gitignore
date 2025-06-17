@@ -20,8 +20,8 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Storage directories (contains processed data)
-storage/index/
-webapp/index/
+rag_storage/index/
+rag_webapp/index/
 
 # Docker
 .dockerignore
