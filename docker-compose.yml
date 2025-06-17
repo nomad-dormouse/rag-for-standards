@@ -22,7 +22,6 @@ services:
       - rag_index_volume:/${CONTAINER_WORKDIR_NAME}/${INDEX_DIR_NAME}
     networks:
       - ${DOCKER_NETWORK_NAME}
-    restart: unless-stopped
   
   # WEB APPLICATION SERVICE
   rag_webapp_service:

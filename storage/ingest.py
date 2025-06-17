@@ -5,7 +5,10 @@ Loads documents, creates embeddings, and builds searchable index.
 """
 
 import os
+import logging
+import time
 from dotenv import load_dotenv
+from tqdm import tqdm
 from llama_index.core import SimpleDirectoryReader, VectorStoreIndex, Settings
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
@@ -15,7 +18,7 @@ def main():
     index_dir = os.getenv("INDEX_DIR_NAME")
     embedding_model_name = os.getenv("EMBEDDING_MODEL_NAME")
     
-    print(f"Loading documents from: {standards_dir}...")
+    print(f"Loading Ukrainian technical standards from: {standards_dir}...")
     try:
         documents = SimpleDirectoryReader(
             input_dir=standards_dir,
@@ -39,13 +42,23 @@ def main():
         print(f"Error loading embedding model: {e}")
         raise
     
-    print("Building index...")
-    index = VectorStoreIndex.from_documents(documents)
+    print(f"Building index for {len(documents)} documents...")
+    logging.basicConfig(level=logging.DEBUG)
+    try:
+        index = VectorStoreIndex.from_documents(tqdm(documents))
+        print("Index building completed!")
+    except Exception as e:
+        print(f"Error building index: {e}")
+        raise
     
     print(f"Saving index to: {index_dir}...")
-    index.storage_context.persist(persist_dir=index_dir)
-    
-    print("Index built and stored successfully!")
+    try:
+        os.makedirs(index_dir, exist_ok=True)
+        index.storage_context.persist(persist_dir=index_dir)
+        print("Index built and stored successfully!")
+    except Exception as e:
+        print(f"Error saving index: {e}")
+        raise
 
 if __name__ == "__main__":
     main()
