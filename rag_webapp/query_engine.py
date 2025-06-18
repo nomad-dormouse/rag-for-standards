@@ -56,10 +56,7 @@ def initialise_query_engine():
     print("Initialising retriever and query engine...")
     _retriever = index.as_retriever(similarity_top_k=_config['similarity_top_k'])
     prompt_template = PromptTemplate(
-        f"{_config['system_prompt']}\n
-        {_config['context_prompt']} {{context_str}}\n
-        {_config['question_prompt']} {{query_str}}\n
-        {_config['answer_prompt']}"
+        f"{_config['system_prompt']}\n\n{_config['context_prompt']} {{context_str}}\n\n{_config['question_prompt']} {{query_str}}\n\n{_config['answer_prompt']}"
     )
     _query_engine = index.as_query_engine(
         text_qa_template=prompt_template,
@@ -76,10 +73,7 @@ def update_language_prompts():
     _config['question_prompt'] = t('question_prompt')
     _config['answer_prompt'] = t('answer_prompt')
     prompt_template = PromptTemplate(
-        f"{_config['system_prompt']}\n
-        {_config['context_prompt']} {{context_str}}\n
-        {_config['question_prompt']} {{query_str}}\n
-        {_config['answer_prompt']}"
+        f"{_config['system_prompt']}\n\n{_config['context_prompt']} {{context_str}}\n\n{_config['question_prompt']} {{query_str}}\n\n{_config['answer_prompt']}"
     )
     index = _retriever._index
     _query_engine = index.as_query_engine(
@@ -96,15 +90,11 @@ def get_answer_without_RAG(query: str) -> str:
         print("\n" + "=" * _config['delimiter_length'])
         print("DIRECT LLM QUERY (NO RAG)")
         print("=" * _config['delimiter_length'] + "\n")
-        print(f"{_config['system_prompt']}\n
-              {_config['question_prompt']} {query}\n
-              {_config['answer_prompt']}")
+        print(f"{_config['system_prompt']}\n\n{_config['question_prompt']} {query}\n\n{_config['answer_prompt']}")
         print("=" * _config['delimiter_length'] + "\n")
         
         prompt_template = PromptTemplate(
-            f"{_config['system_prompt']}\n
-            n{_config['question_prompt']} {{query_str}}\n
-            {_config['answer_prompt']}"
+            f"{_config['system_prompt']}\n\n{_config['question_prompt']} {{query_str}}\n\n{_config['answer_prompt']}"
         )
         formatted_query = prompt_template.format(query_str=query)
         response = Settings.llm.complete(formatted_query)
@@ -127,10 +117,7 @@ def get_answer_with_RAG(query: str) -> dict:
         print("\n" + "=" * _config['delimiter_length'])
         print("FULL RAG QUERY WITH CONTEXT")
         print("=" * _config['delimiter_length'] + "\n")
-        print(f"{_config['system_prompt']}\n
-              {_config['context_prompt']} {context_str}\n
-              {_config['question_prompt']} {query}\n
-              {_config['answer_prompt']}")
+        print(f"{_config['system_prompt']}\n\n{_config['context_prompt']} {context_str}\n\n{_config['question_prompt']} {query}\n\n{_config['answer_prompt']}")
         print("="*_config['delimiter_length'] + "\n")
         
         print("Running query...")
