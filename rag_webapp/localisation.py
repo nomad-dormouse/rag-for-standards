@@ -14,6 +14,7 @@ load_dotenv()
 TRANSLATIONS = {
     'en': {
         # Webapp interface
+        'loading_system_message': '🚀 Loading AI system and standards database... Please wait.',
         'app_title': 'Search through Ukrainian technical standards using AI',
         'query_input_label': 'Enter your question',
         'query_input_placeholder': 'Enter your question here. For example: "What are the ergonomic requirements for workplace design?"',
@@ -43,6 +44,7 @@ TRANSLATIONS = {
     
     'uk': {
         # Webapp interface
+        'loading_system_message': '🚀 Завантаження системи ШІ та бази стандартів... Будь ласка, зачекайте.',
         'app_title': 'Пошук по українських технічних стандартах за допомогою ШІ',
         'query_input_label': 'Введіть ваше запитання',
         'query_input_placeholder': 'Введіть ваше запитання тут. Наприклад: "Які ергономічні вимоги до організації робочого місця?"',
