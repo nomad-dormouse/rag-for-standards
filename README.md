@@ -1,6 +1,6 @@
 # RAG for Ukrainian Technical Standards
 
-A Retrieval-Augmented Generation (RAG) system for searching and answering questions about Ukrainian technical documentation standards using Docker containerisation.
+A bilingual Retrieval-Augmented Generation (RAG) system for searching and answering questions about Ukrainian technical documentation standards using Docker containerisation.
 
 ## 🚀 Quick Start
 
@@ -80,13 +80,13 @@ cp .env.template .env
 
 ## 📊 Features
 
-- **Multi-language Support**: Ukrainian, English, Russian document processing
+- **Bilingual Interface**: Switch between English 🇬🇧 and Ukrainian 🇺🇦 instantly
+- **Dual Response Mode**: Compare answers with and without access to standards
 - **Docker Containerisation**: Isolated services with optimised architecture
 - **One-time Ingestion**: Storage service runs once to build index, then webapp serves queries
-- **Remote Deployment**: One-command deployment to remote servers
-- **RAG Pipeline**: Advanced retrieval with similarity search
-- **Web Interface**: User-friendly Streamlit application
-- **Document Processing**: Automated PDF ingestion and indexing
+- **Remote Deployment**: One-command deployment to remote servers with Git LFS support
+- **RAG Pipeline**: Advanced retrieval with similarity search and source transparency
+- **Web Interface**: User-friendly Streamlit application with progressive loading
 
 ## 🌐 Access
 
@@ -103,5 +103,9 @@ The system processes 188 Ukrainian technical standards (5,167+ pages) including:
 
 ## 🔍 Usage
 
-1. **Ask Questions**: Enter queries in English or Ukrainian
-2. **Get Answers**: Receive two AI-generated responses: one based on retrieved context, and another one just from general LLM knowledge
+1. **Choose Language**: Click 🇬🇧 English or 🇺🇦 Українська buttons at the top
+2. **Ask Questions**: Enter queries in English or Ukrainian about technical standards
+3. **Compare Responses**: Receive two AI-generated responses:
+   - 💭 **Without Standards**: General AI knowledge response
+   - 📚 **With Standards**: Response based on retrieved document content
+4. **Review Sources**: View retrieved document chunks with similarity scores
