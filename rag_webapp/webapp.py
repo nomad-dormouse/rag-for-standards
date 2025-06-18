@@ -15,8 +15,6 @@ if 'initialized' not in st.session_state:
     with st.spinner(t('loading_system_message')):
         initialise_query_engine()
         st.session_state.initialized = True
-else:
-    initialise_query_engine()  # Still call to ensure components are loaded
 
 # Language buttons
 current_lang = get_language()

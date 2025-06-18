@@ -32,7 +32,7 @@ def initialise_query_engine():
         'embedding_model_name': os.getenv("EMBEDDING_MODEL_NAME"),
         'openai_api_key': os.getenv("OPENAI_API_KEY"),
         'openai_model_name': os.getenv("OPENAI_MODEL_NAME"),
-        'temperature': os.getenv("OPENAI_TEMPERATURE"),
+        'temperature': float(os.getenv("OPENAI_TEMPERATURE")),
         'similarity_top_k': int(os.getenv("SIMILARITY_TOP_K")),
         'system_prompt': t('system_prompt'),
         'context_prompt': t('context_prompt'),
@@ -67,7 +67,9 @@ def initialise_query_engine():
 
 def update_language_prompts():
     """Update query engine prompts for language change without reloading index."""
-    global _query_engine, _config
+    global _config, _retriever, _query_engine
+    if _config is None or _retriever is None or _query_engine is None:
+        initialise_query_engine()
     _config['system_prompt'] = t('system_prompt')
     _config['context_prompt'] = t('context_prompt')
     _config['question_prompt'] = t('question_prompt')
@@ -84,7 +86,10 @@ def update_language_prompts():
 
 def get_answer_without_RAG(query: str) -> str:
     """Get direct LLM answer without using RAG components"""
-    global _config
+    global _config, _retriever, _query_engine
+    if _config is None or _retriever is None or _query_engine is None:
+        initialise_query_engine()
+    
     try:
         print(f"Processing direct query (without RAG): {query}")
         print("\n" + "=" * _config['delimiter_length'])
@@ -105,7 +110,9 @@ def get_answer_without_RAG(query: str) -> str:
 
 def get_answer_with_RAG(query: str) -> dict:
     """Get RAG answer with retrieved context"""
-    global _query_engine, _retriever, _config
+    global _config, _retriever, _query_engine
+    if _config is None or _retriever is None or _query_engine is None:
+        initialise_query_engine()
     
     try:
         print(f"Processing RAG query: {query}")
