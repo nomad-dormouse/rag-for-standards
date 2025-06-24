@@ -20,7 +20,7 @@ def main():
         documents = SimpleDirectoryReader(
             input_dir=standards_dir,
             recursive=True,
-            required_exts=[".pdf"],
+            required_exts=[".pdf", ".docx", ".doc"],
             errors='ignore'
         ).load_data()
         print(f"Loaded {len(documents)} document pages")
