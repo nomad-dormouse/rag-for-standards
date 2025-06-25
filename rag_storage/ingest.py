@@ -11,88 +11,65 @@ from dotenv import load_dotenv
 from llama_index.core import SimpleDirectoryReader, VectorStoreIndex, Settings
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
-def analyse_parsing(documents):
-    """Analyse document parsing statistics."""
-    parsing_stats = {
-        'total_files_count': 0,
-        'empty_files': [],
-        'empty_files_count': 0,
-        'empty_files_percentage': 0,
-        'total_pages_count': len(documents),
-        'empty_pages_count': 0,
-        'empty_pages_percentage': 0,
-        'pages_by_extension': defaultdict(int),
-        'pages_per_file': defaultdict(int),
-        'page_lengths': defaultdict(list),
-        'processing_errors': []
+def generate_report(documents, index):
+    """Generate a concise ingestion report by analysing documents and indexing."""
+    report = {
+        'parsing': {
+            'total_files_count': 0,
+            'empty_files': [],
+            'empty_files_count': 0,
+            'empty_files_percentage': 0,
+            'total_pages_count': len(documents),
+            'empty_pages_count': 0,
+            'empty_pages_percentage': 0,
+            'pages_per_file': defaultdict(int),
+            'page_lengths': defaultdict(list),
+        },
+        'indexing': {
+            'vector_count': len(index.vector_store._data.embedding_dict),
+            'embedding_model_name': os.getenv("EMBEDDING_MODEL_NAME"),
+            'embedding_dimensions': Settings.embed_model._model.get_sentence_embedding_dimension(),
+        },
+        'text_summary': ''
     }
     
     for doc in documents:
         if 'file_name' in doc.metadata:
             file_name = doc.metadata['file_name']
             file_ext = os.path.splitext(file_name)[1].lower()
-            parsing_stats['pages_by_extension'][file_ext] += 1
-            parsing_stats['pages_per_file'][file_name] += 1
+            report['parsing']['pages_per_file'][file_name] += 1
             text_length = len(doc.text.strip())
-            parsing_stats['page_lengths'][file_name].append(text_length)
+            report['parsing']['page_lengths'][file_name].append(text_length)
         text_length = len(doc.text.strip())
         if text_length == 0:
-            parsing_stats['empty_pages_count'] += 1
+            report['parsing']['empty_pages_count'] += 1
     
-    parsing_stats['total_files_count'] = len(parsing_stats['pages_per_file'])
-    parsing_stats['empty_files'] = [file for file, pages in parsing_stats['page_lengths'].items() 
+    report['parsing']['total_files_count'] = len(report['parsing']['pages_per_file'])
+    report['parsing']['empty_files'] = [file for file, pages in report['parsing']['page_lengths'].items() 
                                  if all(length == 0 for length in pages)]
-    parsing_stats['empty_files_count'] = len(parsing_stats['empty_files'])
-    parsing_stats['empty_files_percentage'] = (parsing_stats['empty_files_count'] / parsing_stats['total_files_count'] * 100) if parsing_stats['total_files_count'] > 0 else 0
-    parsing_stats['empty_pages_count'] = len(parsing_stats['empty_files'])
-    parsing_stats['empty_pages_percentage'] = (parsing_stats['empty_pages_count'] / parsing_stats['total_pages_count'] * 100) if parsing_stats['total_pages_count'] > 0 else 0
+    report['parsing']['empty_files_count'] = len(report['parsing']['empty_files'])
+    report['parsing']['empty_files_percentage'] = (report['parsing']['empty_files_count'] / report['parsing']['total_files_count'] * 100) if report['parsing']['total_files_count'] > 0 else 0
+    report['parsing']['empty_pages_percentage'] = (report['parsing']['empty_pages_count'] / report['parsing']['total_pages_count'] * 100) if report['parsing']['total_pages_count'] > 0 else 0
+
+    report['text_summary'] = f"""INGESTION REPORT
+- Total pages: {report['parsing']['total_pages_count']:,} from {report['parsing']['total_files_count']:,} files
+- Empty pages: {report['parsing']['empty_pages_percentage']:.1f}% ({report['parsing']['empty_pages_count']:,} pages)
+- Completely empty files: {report['parsing']['empty_files_percentage']:.1f}% ({report['parsing']['empty_files_count']:,} files)
+- Vector embeddings: {report['indexing']['vector_count']:,}
+- Embedding model: {report['indexing']['embedding_model_name']}
+- Embedding dimensions: {report['indexing']['embedding_dimensions']:,}"""
     
-    return parsing_stats
-
-def analyse_indexing(index):
-    """Analyse vector index statistics."""
-    index_stats = {}
-    index_stats['indexed_docs'] = len(index.docstore.docs)
-    index_stats['vector_count'] = len(index.vector_store._data.embedding_dict)
-    index_stats['index_size_mb'] = index.storage_context.get_index_size()
-    index_stats['embedding_dimensions'] = Settings.embed_model._model.get_sentence_embedding_dimension()
-    return index_stats
-
-def generate_report(documents, index):
-    """Generate a concise ingestion report by analysing documents and indexing."""
-
-    parsing_stats = analyse_parsing(documents)
-    index_stats = analyse_indexing(index)
-    embedding_model_name = os.getenv("EMBEDDING_MODEL_NAME")
-    index_dir = os.getenv("INDEX_DIR_NAME")
+    storage_dir = os.getenv("STORAGE_DIR_NAME")
     report_file_name = os.getenv("REPORT_FILE_NAME")
-
-    report = f"""# INGESTION REPORT
-
-## Documents Parsing Summary
-- **Total pages:** {parsing_stats['total_pages_count']:,} from {parsing_stats['total_files_count']:,} files"""
-    for ext, count in sorted(parsing_stats['pages_by_extension'].items()):
-        percentage = (count / parsing_stats['total_pages_count'] * 100) if parsing_stats['total_pages_count'] > 0 else 0
-        report += f" | {ext.upper()}: {count:,} ({percentage:.1f}%)"
-    report += f"""
-- **Empty pages:** {parsing_stats['empty_pages_percentage']:.1f}% ({parsing_stats['empty_pages_count']:,} pages)
-- **Completely empty files:** {parsing_stats['empty_files_percentage']:.1f}% ({parsing_stats['empty_files_count']:,} files)"""
-    report += f"\n\n## Vector Index Summary"
-    report += f"\n- **Indexed documents:** {index_stats['indexed_docs']:,}"
-    report += f"\n- **Vector embeddings:** {index_stats['vector_count']:,}"
-    report += f"\n- **Index size:** {index_stats['index_size_mb']:.1f} MB"
-    report += f"\n- **Embedding model:** {embedding_model_name}"
-    report += f"\n- **Embedding dimensions:** {index_stats['embedding_dimensions']:,}"
-    
-    report_path = os.path.join(index_dir, report_file_name)
+    report_path = os.path.join(storage_dir, report_file_name)
     try:
         with open(report_path, 'w', encoding='utf-8') as f:
-            f.write(report)
-        print(f"Ingestion report saved to: {report_path}")
+            json.dump(report, f, indent=2, ensure_ascii=False, default=str)
+        print(f"Ingestion report saved as JSON to: {report_path}")
     except Exception as e:
         print(f"Error saving report: {e}")
     
-    return report
+    return report['text_summary']
 
 def main():
     
@@ -105,18 +82,21 @@ def main():
     
     print(f"Loading Ukrainian technical standards from: {standards_dir}...")
     try:
-        documents = SimpleDirectoryReader(
+        all_documents = SimpleDirectoryReader(
             input_dir=standards_dir,
             recursive=True,
-            required_exts=[".pdf", ".docx", ".doc"],
+            required_exts=[".pdf"],
             errors='ignore'
         ).load_data()
-        print(f"Loaded {len(documents)} document pages")
+        print(f"Loaded {len(all_documents)} document pages")
+        documents = [doc for doc in all_documents if len(doc.text.strip()) > 0]
+        empty_pages_filtered = len(all_documents) - len(documents)
+        print(f"Filtered out {empty_pages_filtered} empty pages, {len(documents)} pages will be indexed")
     except Exception as e:
         print(f"Error loading documents: {e}")
         return
     if not documents:
-        print("No documents were loaded successfully!")
+        print("No documents with content were found!")
         return
     
     print(f"Setting up embedding model: {embedding_model_name}...")
@@ -145,9 +125,8 @@ def main():
         raise
     
     print("Generating ingestion report...")
-    report = generate_report(documents, index)
-    print("\n" + "="*delimiter_length)
-    print(report)
+    text_summary = generate_report(all_documents, index)
+    print(text_summary)
 
 if __name__ == "__main__":
     main()
