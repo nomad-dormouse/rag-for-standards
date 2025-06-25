@@ -100,8 +100,17 @@ def get_answer_with_RAG(query: str) -> dict:
         
         print("Retrieving context...")
         retrieved_nodes = _retriever.retrieve(query)
+        MIN_CONTENT_LENGTH = 0
+        non_empty_nodes = []
+        empty_nodes = []
+        for node in retrieved_nodes:
+            if len(node.text.strip()) > MIN_CONTENT_LENGTH:
+                non_empty_nodes.append(node)
+            else:
+                empty_nodes.append(node)
+        print(f"Retrieved {len(retrieved_nodes)} chunks, using {len(non_empty_nodes)} with content (filtered out {len(empty_nodes)} empty chunks)")
         context_parts = []
-        for i, node in enumerate(retrieved_nodes):
+        for i, node in enumerate(non_empty_nodes):
             metadata = node.metadata if hasattr(node, 'metadata') else {}
             score = getattr(node, 'score', 0.0)
             source_header = f"{TRANSLATIONS['en']['source_label']} {i+1} ({TRANSLATIONS['en']['similarity_label']}: {score:.3f})"
@@ -113,7 +122,8 @@ def get_answer_with_RAG(query: str) -> dict:
             content_section = f"{TRANSLATIONS['en']['content_label']}:\n{node.text}"
             source_parts = [source_header] + metadata_lines + [content_section]
             context_parts.append("\n".join(source_parts))
-        context_str = f"\n\n{'='*50}\n\n".join(context_parts)
+        
+        context_str = f"\n\n{'='*50}\n\n".join(context_parts) if context_parts else "No content available from retrieved sources."
 
         print("\n" + "=" * _config['delimiter_length'])
         print("FULL RAG QUERY WITH CONTEXT")
@@ -121,8 +131,12 @@ def get_answer_with_RAG(query: str) -> dict:
         print(f"{_config['system_prompt']}\n\n{_config['context_prompt']} {context_str}\n\n{_config['question_prompt']} {query}\n\n{_config['answer_prompt']}")
         print("="*_config['delimiter_length'] + "\n")
         
-        print("Running query...")
-        response = _query_engine.query(query)
+        print("Running query with filtered context...")
+        prompt_template = PromptTemplate(
+            f"{_config['system_prompt']}\n\n{_config['context_prompt']} {{context_str}}\n\n{_config['question_prompt']} {{query_str}}\n\n{_config['answer_prompt']}"
+        )
+        formatted_prompt = prompt_template.format(context_str=context_str, query_str=query)
+        response = Settings.llm.complete(formatted_prompt)
         print("Got RAG response")
         
         sources = []
