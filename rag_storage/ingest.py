@@ -10,7 +10,7 @@ from llama_index.core import SimpleDirectoryReader, VectorStoreIndex, Settings
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
 def main():
-    load_dotenv()
+    load_dotenv(override=True)
     standards_dir = os.getenv("STANDARDS_DIR_NAME")
     index_dir = os.getenv("INDEX_DIR_NAME")
     embedding_model_name = os.getenv("EMBEDDING_MODEL_NAME")

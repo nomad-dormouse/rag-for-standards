@@ -26,7 +26,7 @@ def initialise_query_engine():
     global _query_engine, _retriever, _config
     
     print("Loading .env file and setting up config...")
-    load_dotenv()
+    load_dotenv(override=True)
     _config = {
         'index_path': os.getenv("INDEX_PATH"),
         'embedding_model_name': os.getenv("EMBEDDING_MODEL_NAME"),
@@ -34,10 +34,10 @@ def initialise_query_engine():
         'openai_model_name': os.getenv("OPENAI_MODEL_NAME"),
         'temperature': float(os.getenv("OPENAI_TEMPERATURE")),
         'similarity_top_k': int(os.getenv("SIMILARITY_TOP_K")),
-        'system_prompt': t('system_prompt'),
-        'context_prompt': t('context_prompt'),
-        'question_prompt': t('question_prompt'),
-        'answer_prompt': t('answer_prompt'),
+        'system_prompt': os.getenv("SYSTEM_PROMPT"),
+        'context_prompt': os.getenv("CONTEXT_PROMPT"),
+        'question_prompt': os.getenv("QUESTION_PROMPT"),
+        'answer_prompt': os.getenv("ANSWER_PROMPT"),
         'delimiter_length': int(os.getenv("DELIMITER_LENGTH"))
     }
 
@@ -64,25 +64,6 @@ def initialise_query_engine():
     )
     
     print("Query engine initialised successfully!")
-
-def update_language_prompts():
-    """Update query engine prompts for language change without reloading index."""
-    global _config, _retriever, _query_engine
-    if _config is None or _retriever is None or _query_engine is None:
-        initialise_query_engine()
-    _config['system_prompt'] = t('system_prompt')
-    _config['context_prompt'] = t('context_prompt')
-    _config['question_prompt'] = t('question_prompt')
-    _config['answer_prompt'] = t('answer_prompt')
-    prompt_template = PromptTemplate(
-        f"{_config['system_prompt']}\n\n{_config['context_prompt']} {{context_str}}\n\n{_config['question_prompt']} {{query_str}}\n\n{_config['answer_prompt']}"
-    )
-    index = _retriever._index
-    _query_engine = index.as_query_engine(
-        text_qa_template=prompt_template,
-        similarity_top_k=_config['similarity_top_k']
-    )
-    print("Query engine updated with new language prompts.")
 
 def get_answer_without_RAG(query: str) -> str:
     """Get direct LLM answer without using RAG components"""

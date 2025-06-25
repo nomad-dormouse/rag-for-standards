@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from query_engine import get_answer_with_RAG, get_answer_without_RAG, update_language_prompts, initialise_query_engine
+from query_engine import get_answer_with_RAG, get_answer_without_RAG, initialise_query_engine
 from localisation import t, set_language, get_language, get_language_names
 
 # Configure page
@@ -26,7 +26,6 @@ with lang_col1:
                 use_container_width=True):
         if current_lang != "en":
             set_language("en")
-            update_language_prompts()
             st.rerun()
 with lang_col2:
     if st.button(language_options["uk"], 
@@ -34,7 +33,6 @@ with lang_col2:
                 use_container_width=True):
         if current_lang != "uk":
             set_language("uk")
-            update_language_prompts()
             st.rerun()
 
 # Page title and tips

@@ -8,12 +8,11 @@ import os
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv()
+load_dotenv(override=True)
 
 # Translation dictionary for UI and prompts
 TRANSLATIONS = {
     'en': {
-        # Webapp interface
         'loading_system_message': '🚀 Loading AI system and standards database... Please wait.',
         'app_title': 'Search through Ukrainian technical standards using AI',
         'query_input_label': 'Enter your question',
@@ -25,7 +24,6 @@ TRANSLATIONS = {
         'processing_message': 'Processing your query...',
         'tips_header': 'How to use',
         'tips_text': '- Choose language using buttons above: 🇬🇧 English or 🇺🇦 Ukrainian\n- Ask a questions in chosen language about Ukrainian technical standards and press Enter or click 🔎 Search button\n- Get two different answers: on the left — 📑 with access to those standards, and on the right — 💭 without access to them',
-        # Sources display
         'retrieved_sources_header': 'Retrieved chunks of standards',
         'source_label': 'SOURCE',
         'similarity_label': 'similarity',
@@ -35,15 +33,9 @@ TRANSLATIONS = {
         'no_text_content_warning': 'No text content available in this chunk',
         'no_sources_warning': 'No sources retrieved for this query',
         'all_sources_label': 'All retrieved sources',
-        # Prompt templates
-        'system_prompt': 'You are a helpful assistant who answers questions about Ukrainian standards for technical documentation. You should respond in English.',
-        'context_prompt': 'Given the following information:',
-        'question_prompt': 'Question:',
-        'answer_prompt': 'Answer:',
     },
     
     'uk': {
-        # Webapp interface
         'loading_system_message': '🚀 Завантаження системи ШІ та бази стандартів... Будь ласка, зачекайте.',
         'app_title': 'Пошук по українських технічних стандартах за допомогою ШІ',
         'query_input_label': 'Введіть ваше запитання',
@@ -55,7 +47,6 @@ TRANSLATIONS = {
         'processing_message': 'Обробка вашого запиту...',
         'tips_header': 'Як користуватися',
         'tips_text': '- Виберіть мову за допомогою кнопок вище: 🇬🇧 Англійську або 🇺🇦 Українську\n- Поставте запитання на вибраній мові про українські технічні стандарти і натисніть Enter або кнопку 🔎 Пошук\n- Отримайте дві різні відповіді: ліворуч — 📑 з доступом до цих стандартів, а праворуч — 💭 без доступу до них',
-        # Sources display
         'retrieved_sources_header': 'Використані фрагменти стандартів',
         'source_label': 'ДЖЕРЕЛО',
         'similarity_label': 'схожість',
@@ -65,11 +56,6 @@ TRANSLATIONS = {
         'no_text_content_warning': 'У цьому фрагменті немає текстового контенту',
         'no_sources_warning': 'Для цього запиту не знайдено джерел',
         'all_sources_label': 'Всі знайдені джерела',
-        # Prompt templates
-        'system_prompt': 'Ти — корисний асистент, який відповідає на запитання про українські стандарти технічної документації.',
-        'context_prompt': 'Враховуючи наступну інформацію:',
-        'question_prompt': 'Запитання:',
-        'answer_prompt': 'Відповідь:',
     }
 }
 
