@@ -11,7 +11,7 @@ from llama_index.core.storage.storage_context import StorageContext
 from llama_index.core.prompts import PromptTemplate
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.openai import OpenAI
-from localisation import t
+from localisation import TRANSLATIONS
 import streamlit as st
 
 # Global variables to store initialised components
@@ -100,7 +100,20 @@ def get_answer_with_RAG(query: str) -> dict:
         
         print("Retrieving context...")
         retrieved_nodes = _retriever.retrieve(query)
-        context_str = "\n\n".join([node.text for node in retrieved_nodes])
+        context_parts = []
+        for i, node in enumerate(retrieved_nodes):
+            metadata = node.metadata if hasattr(node, 'metadata') else {}
+            score = getattr(node, 'score', 0.0)
+            source_header = f"{TRANSLATIONS['en']['source_label']} {i+1} ({TRANSLATIONS['en']['similarity_label']}: {score:.3f})"
+            metadata_lines = []
+            if "file_name" in metadata:
+                metadata_lines.append(f"{TRANSLATIONS['en']['file_label']}: {metadata['file_name']}")
+            if "page_label" in metadata:
+                metadata_lines.append(f"{TRANSLATIONS['en']['page_label']}: {metadata['page_label']}")
+            content_section = f"{TRANSLATIONS['en']['content_label']}:\n{node.text}"
+            source_parts = [source_header] + metadata_lines + [content_section]
+            context_parts.append("\n".join(source_parts))
+        context_str = f"\n\n{'='*50}\n\n".join(context_parts)
 
         print("\n" + "=" * _config['delimiter_length'])
         print("FULL RAG QUERY WITH CONTEXT")
