@@ -1,7 +1,13 @@
-# Environment variables
+# Project specifics
+rag_storage/index/
+rag_webapp/index/
+ingestion_report.json
 .env
 .env.local
 .env.*.local
+.dockerignore
+docker-compose.override.yml
+*.log
 
 # Python
 __pycache__/
@@ -19,15 +25,6 @@ ENV/
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Storage directories (contains processed data)
-rag_storage/index/
-rag_webapp/index/
-
-# Docker
-.dockerignore
-docker-compose.override.yml
-*.log
-
 # IDE
 .vscode/
 .idea/
@@ -43,16 +40,3 @@ docker-compose.override.yml
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# pytest
-.pytest_cache/
-.coverage
-htmlcov/
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
