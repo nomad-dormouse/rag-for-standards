@@ -26,9 +26,13 @@ def main():
     ingestion_results = {
         'parsing': {
             'total_files_count': 0,
+            'successfully_parsed_percentage': 0,
             'files_with_parsing_errors_count': 0,
-            'files_with_parsing_errors_percentage': 0,
-            'files_with_parsing_errors': {
+            'files': {
+                'ParsedSuccessfully': {
+                    'files_count': 0,
+                    'files': []
+                },
                 'CorruptedPDF': {
                     'files_count': 0,
                     'files': []
@@ -38,6 +42,10 @@ def main():
                     'files': []
                 },
                 'ScannedDocument': {
+                    'files_count': 0,
+                    'files': []
+                },
+                'Exception': {
                     'files_count': 0,
                     'files': []
                 },
@@ -80,35 +88,41 @@ def main():
                 'xref', 'trailer', 'startxref'
             ])
             if has_corruption_warnings:
-                ingestion_results['parsing']['files_with_parsing_errors']['CorruptedPDF']['files'].append(
+                ingestion_results['parsing']['files']['CorruptedPDF']['files'].append(
                     os.path.relpath(pdf_file, standards_dir)
                 )
                 print(f"WARNING: corrupted PDF detected - {pdf_file}")
             elif not file_pages:
-                ingestion_results['parsing']['files_with_parsing_errors']['EmptyDocument']['files'].append(
+                ingestion_results['parsing']['files']['EmptyDocument']['files'].append(
                     os.path.relpath(pdf_file, standards_dir)
                 )
                 print(f"WARNING: no pages extracted from {pdf_file}")
             else:
                 empty_pages_in_file = sum(1 for page in file_pages if len(page.text.strip()) == 0)
                 if empty_pages_in_file == len(file_pages) and len(file_pages) > 0:
-                    ingestion_results['parsing']['files_with_parsing_errors']['ScannedDocument']['files'].append(
+                    ingestion_results['parsing']['files']['ScannedDocument']['files'].append(
                         os.path.relpath(pdf_file, standards_dir)
                     )
                     print(f"WARNING: likely scanned document - {pdf_file}")
+                else:
+                    ingestion_results['parsing']['files']['ParsedSuccessfully']['files'].append(
+                        os.path.relpath(pdf_file, standards_dir)
+                    )
                         
             pages.extend(file_pages)
         except Exception as e:
-            ingestion_results['parsing']['files_with_parsing_errors']['Exception']['files'].append(
+            ingestion_results['parsing']['files']['Exception']['files'].append(
                 os.path.relpath(pdf_file, standards_dir)
             )
             print(f"Exception caught for {pdf_file}: {type(e).__name__}: {e}")
-    ingestion_results['parsing']['files_with_parsing_errors']['CorruptedPDF']['files_count'] = len(ingestion_results['parsing']['files_with_parsing_errors']['CorruptedPDF']['files'])
-    ingestion_results['parsing']['files_with_parsing_errors']['EmptyDocument']['files_count'] = len(ingestion_results['parsing']['files_with_parsing_errors']['EmptyDocument']['files'])
-    ingestion_results['parsing']['files_with_parsing_errors']['ScannedDocument']['files_count'] = len(ingestion_results['parsing']['files_with_parsing_errors']['ScannedDocument']['files'])
-    total_error_count = ingestion_results['parsing']['files_with_parsing_errors']['CorruptedPDF']['files_count'] + ingestion_results['parsing']['files_with_parsing_errors']['EmptyDocument']['files_count'] + ingestion_results['parsing']['files_with_parsing_errors']['ScannedDocument']['files_count']
+    ingestion_results['parsing']['files']['ParsedSuccessfully']['files_count'] = len(ingestion_results['parsing']['files']['ParsedSuccessfully']['files'])
+    ingestion_results['parsing']['files']['CorruptedPDF']['files_count'] = len(ingestion_results['parsing']['files']['CorruptedPDF']['files'])
+    ingestion_results['parsing']['files']['EmptyDocument']['files_count'] = len(ingestion_results['parsing']['files']['EmptyDocument']['files'])
+    ingestion_results['parsing']['files']['ScannedDocument']['files_count'] = len(ingestion_results['parsing']['files']['ScannedDocument']['files'])
+    ingestion_results['parsing']['files']['Exception']['files_count'] = len(ingestion_results['parsing']['files']['Exception']['files'])
+    total_error_count = ingestion_results['parsing']['files']['CorruptedPDF']['files_count'] + ingestion_results['parsing']['files']['EmptyDocument']['files_count'] + ingestion_results['parsing']['files']['ScannedDocument']['files_count'] + ingestion_results['parsing']['files']['Exception']['files_count']
     ingestion_results['parsing']['files_with_parsing_errors_count'] = total_error_count
-    ingestion_results['parsing']['files_with_parsing_errors_percentage'] = (total_error_count / ingestion_results['parsing']['total_files_count'] * 100) if ingestion_results['parsing']['total_files_count'] > 0 else 0
+    ingestion_results['parsing']['successfully_parsed_files_percentage'] = (ingestion_results['parsing']['files']['ParsedSuccessfully']['files_count'] / ingestion_results['parsing']['total_files_count'] * 100) if ingestion_results['parsing']['total_files_count'] > 0 else 0
     ingestion_results['parsing']['total_pages_count'] = len(pages)
     print(f"Loaded {ingestion_results['parsing']['total_pages_count']} pages from {ingestion_results['parsing']['total_files_count']} files")    
     print(f"Encountered {ingestion_results['parsing']['files_with_parsing_errors_count']} files with parsing errors")
@@ -151,10 +165,11 @@ def main():
 
 Files parsing
 - Total files: {ingestion_results['parsing']['total_files_count']:,}
-- Files with parsing errors: {ingestion_results['parsing']['files_with_parsing_errors_count']:,} ({ingestion_results['parsing']['files_with_parsing_errors_percentage']:.1f}%)
---- Corrupted PDFs: {ingestion_results['parsing']['files_with_parsing_errors']['CorruptedPDF']['files_count']:,}
---- Empty files: {ingestion_results['parsing']['files_with_parsing_errors']['EmptyDocument']['files_count']:,}
---- Scanned documents: {ingestion_results['parsing']['files_with_parsing_errors']['ScannedDocument']['files_count']:,}
+- Successfully parsed: {ingestion_results['parsing']['files']['ParsedSuccessfully']['files_count']:,} ({ingestion_results['parsing']['successfully_parsed_percentage']:.1f}%)
+- Corrupted PDFs: {ingestion_results['parsing']['files']['CorruptedPDF']['files_count']:,}
+- Empty files: {ingestion_results['parsing']['files']['EmptyDocument']['files_count']:,}
+- Scanned documents: {ingestion_results['parsing']['files']['ScannedDocument']['files_count']:,}
+- Exceptions: {ingestion_results['parsing']['files']['Exception']['files_count']:,}
 - Total pages: {ingestion_results['parsing']['total_pages_count']:,} from {ingestion_results['parsing']['total_files_count']:,} files
 - Empty pages: {ingestion_results['parsing']['empty_pages_count']:,} ({ingestion_results['parsing']['empty_pages_percentage']:.1f}%)
 

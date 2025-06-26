@@ -39,11 +39,27 @@ ssh -t -i "${SSH_KEY}" "${REMOTE_USER}@${REMOTE_HOST}" << EOF
     sudo apt-get autoremove -y && \
     sudo apt-get autoclean
     
-    echo -e "\n${BLUE}Cloning repository and pulling LFS files from ${REPO_URL}...${NC}"
-    rm -rf "${REMOTE_DIR}"
-    git clone "${REPO_URL}" && \
-    cd "${REMOTE_DIR}" && \
-    git lfs pull
+    echo -e "\n${BLUE}Updating repository from ${REPO_URL}...${NC}"
+    if [[ -d "${REMOTE_DIR}" ]]; then
+        echo -e "${YELLOW}Repository found, updating...${NC}"
+        cd "${REMOTE_DIR}"
+        export GIT_LFS_SKIP_SMUDGE=1
+        if git fetch origin && git reset --hard origin/main; then
+            echo -e "${GREEN}Repository updated successfully${NC}"
+            unset GIT_LFS_SKIP_SMUDGE
+        else
+            unset GIT_LFS_SKIP_SMUDGE
+            echo -e "${YELLOW}Git update failed, removing corrupted repository and re-cloning...${NC}"
+            cd ..
+            rm -rf "${REMOTE_DIR}"
+            GIT_LFS_SKIP_SMUDGE=1 git clone "${REPO_URL}" && \
+            cd "${REMOTE_DIR}"
+        fi
+    else
+        echo -e "${YELLOW}Repository not found, cloning (skipping LFS files)...${NC}"
+        GIT_LFS_SKIP_SMUDGE=1 git clone "${REPO_URL}" && \
+        cd "${REMOTE_DIR}"
+    fi
     
     echo -e "\n${BLUE}Copying .env file to project directory...${NC}"
     cp /tmp/.env .env
@@ -53,7 +69,4 @@ ssh -t -i "${SSH_KEY}" "${REMOTE_USER}@${REMOTE_HOST}" << EOF
     chmod +x deploy.sh
     ./deploy.sh remotely
     
-    echo -e "\n${BLUE}Removing standards folder and deployment files...${NC}"
-    rm -rf storage/standards
-    rm -f /tmp/.env
 EOF
