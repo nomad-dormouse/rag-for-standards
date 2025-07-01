@@ -381,12 +381,12 @@ Files parsing
 - Successfully parsed (original): {ingestion_results['parsing']['files']['ParsedSuccessfully']['files_count']:,}
 - Successfully parsed (PyMuPDF): {ingestion_results['parsing']['files']['ParsedWithPyMuPDF']['files_count']:,}
 - Successfully parsed (OCR): {ingestion_results['parsing']['files']['ParsedWithOCR']['files_count']:,}
-- Total successful: {successful_files:,} ({ingestion_results['parsing']['successfully_parsed_percentage']:.1f}%)
-- Corrupted PDFs: {ingestion_results['parsing']['files']['CorruptedPDF']['files_count']:,}
+- Total successful files: {successful_files:,} ({ingestion_results['parsing']['successfully_parsed_percentage']:.1f}%)
+- Corrupted PDF files: {ingestion_results['parsing']['files']['CorruptedPDF']['files_count']:,}
 - Empty files: {ingestion_results['parsing']['files']['EmptyDocument']['files_count']:,}
-- Scanned documents (failed): {ingestion_results['parsing']['files']['ScannedDocument']['files_count']:,}
-- Exceptions: {ingestion_results['parsing']['files']['Exception']['files_count']:,}
-- Total pages: {ingestion_results['parsing']['total_pages_count']:,} from {ingestion_results['parsing']['total_files_count']:,} files
+- Scanned files (failed): {ingestion_results['parsing']['files']['ScannedDocument']['files_count']:,}
+- Exception files: {ingestion_results['parsing']['files']['Exception']['files_count']:,}
+- Total pages: {ingestion_results['parsing']['total_pages_count']:,}
 - Empty pages: {ingestion_results['parsing']['empty_pages_count']:,} ({ingestion_results['parsing']['empty_pages_percentage']:.1f}%)
 
 Vector embeddings
