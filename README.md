@@ -27,7 +27,7 @@ rag-for-standards/
 │   ├── dockerfile_storage     # Docker image for document ingestion
 │   ├── ingest.py             # Enhanced document processing with OCR
 │   ├── setup_ocr.sh          # OCR dependencies installer
-│   ├── test_ocr.py           # OCR functionality tester
+│   ├── test_multilingual_ocr.py # Comprehensive OCR functionality tester
 │   └── requirements_storage.txt # Includes OCR dependencies
 ├── rag_webapp/                # Web application service
 │   ├── dockerfile_webapp     # Docker image for web interface
@@ -129,7 +129,7 @@ OCR dependencies are **automatically included** in the Docker containers. No man
 # For local development outside Docker (optional):
 cd rag_storage
 ./setup_ocr.sh
-python test_ocr.py
+python test_multilingual_ocr.py
 ```
 
 ### Language Support
@@ -199,7 +199,7 @@ If you encounter OCR-related problems:
 
 # For manual testing (local development):
 cd rag_storage
-python test_ocr.py
+python test_multilingual_ocr.py
 
 # Check container OCR setup
 docker-compose run --rm storage tesseract --version
