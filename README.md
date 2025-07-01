@@ -87,6 +87,7 @@ cp .env.template .env
 ## 📊 Features
 
 - **Enhanced PDF Processing**: Handles all PDF types including corrupted and scanned documents with OCR
+- **Multilingual OCR**: Supports English, Ukrainian, and Russian text recognition
 - **Multi-tier Extraction**: Automatic fallback from standard parsing to PyMuPDF to full OCR
 - **Bilingual Interface**: Switch between English 🇬🇧 and Ukrainian 🇺🇦 instantly
 - **Dual Response Mode**: Compare answers with and without access to standards
@@ -133,15 +134,19 @@ python test_ocr.py
 
 ### Language Support
 
-The OCR system supports multiple languages. To add Ukrainian support:
+The OCR system **automatically supports multiple languages**:
+
+- ✅ **English** - Built-in support
+- ✅ **Ukrainian** - Automatically included
+- ✅ **Russian** - Automatically included
+
+The system will automatically detect and process text in any of these languages within the same document.
 
 ```bash
-# Install Ukrainian language pack
-sudo apt-get install tesseract-ocr-ukr
-
-# Or for other languages:
-# sudo apt-get install tesseract-ocr-rus  # Russian
-# sudo apt-get install tesseract-ocr-fra  # French
+# Language packs are automatically installed in Docker
+# For local development, install additional languages:
+sudo apt-get install tesseract-ocr-fra  # French
+sudo apt-get install tesseract-ocr-deu  # German
 ```
 
 ### Processing Results
@@ -213,3 +218,13 @@ Common solutions:
 - **Disk Space**: Temporary images created during OCR (automatically cleaned up)
 
 The enhanced system maintains backward compatibility while dramatically improving document processing success rates from ~50% to ~95%+.
+
+### 🌐 Multilingual OCR Support
+
+Your system now automatically handles documents in **three languages**:
+
+- **English** - International standards, technical documentation
+- **Ukrainian** - ДСТУ standards, local technical documents  
+- **Russian** - Legacy documents, GOST standards
+
+The OCR system will automatically detect and process text in any combination of these languages within the same document, making it perfect for processing diverse technical documentation collections.

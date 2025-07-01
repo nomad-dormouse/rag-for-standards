@@ -61,6 +61,28 @@ def test_tesseract():
             print(f"✗ Could not get Tesseract version: {e}")
             return False
         
+        # Test multilingual support
+        try:
+            # Test if multiple languages can be used
+            test_langs = ['eng', 'ukr', 'rus']
+            available_langs = []
+            
+            for lang in test_langs:
+                try:
+                    # Try to use each language (this will fail if language pack is missing)
+                    pytesseract.image_to_string(Image.new('RGB', (100, 50), color='white'), lang=lang)
+                    available_langs.append(lang)
+                except:
+                    pass
+            
+            if available_langs:
+                print(f"✓ Available languages: {', '.join(available_langs)}")
+            else:
+                print("⚠ No language packs detected")
+                
+        except Exception as e:
+            print(f"⚠ Could not test language support: {e}")
+        
         print("✓ Tesseract is accessible")
         return True
         

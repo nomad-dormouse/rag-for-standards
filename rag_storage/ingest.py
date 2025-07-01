@@ -51,8 +51,9 @@ def extract_text_with_ocr(pdf_path, min_text_threshold=100):
         for page_num, page_image in enumerate(pages):
             print(f"    Processing page {page_num + 1}/{len(pages)}")
             
-            # Extract text using OCR
-            text = pytesseract.image_to_string(page_image, lang='eng')
+            # Extract text using OCR with multiple language support
+            # Supports English, Ukrainian, and Russian
+            text = pytesseract.image_to_string(page_image, lang='eng+ukr+rus')
             
             # Only include pages with meaningful text content
             if len(text.strip()) > min_text_threshold:
@@ -105,9 +106,9 @@ def extract_text_with_pymupdf(pdf_path, min_text_threshold=100):
                     pix = page.get_pixmap(matrix=mat)
                     img_data = pix.pil_tobytes(format="PNG")
                     
-                    # Convert to PIL Image and run OCR
+                    # Convert to PIL Image and run OCR with multiple language support
                     with Image.open(io.BytesIO(img_data)) as img:
-                        ocr_text = pytesseract.image_to_string(img, lang='eng')
+                        ocr_text = pytesseract.image_to_string(img, lang='eng+ukr+rus')
                         if len(ocr_text.strip()) > len(text.strip()):
                             text = ocr_text
                             extraction_method = 'PyMuPDF+OCR'

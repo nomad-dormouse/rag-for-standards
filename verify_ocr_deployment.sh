@@ -134,7 +134,14 @@ test_language_support() {
     if docker-compose run --rm ${STORAGE_SERVICE_NAME} test -f /usr/share/tesseract-ocr/4.00/tessdata/ukr.traineddata; then
         echo -e "${GREEN}✓ Ukrainian language pack available${NC}"
     else
-        echo -e "${YELLOW}⚠ Ukrainian language pack not found (installed but may not be critical)${NC}"
+        echo -e "${YELLOW}⚠ Ukrainian language pack not found${NC}"
+    fi
+    
+    # Test Russian language pack
+    if docker-compose run --rm ${STORAGE_SERVICE_NAME} test -f /usr/share/tesseract-ocr/4.00/tessdata/rus.traineddata; then
+        echo -e "${GREEN}✓ Russian language pack available${NC}"
+    else
+        echo -e "${YELLOW}⚠ Russian language pack not found${NC}"
     fi
 }
 
@@ -192,3 +199,5 @@ echo -e "\n${BLUE}To run the enhanced ingestion:${NC}"
 echo -e "${BLUE}  docker-compose --profile ingestion run --rm ${STORAGE_SERVICE_NAME}${NC}"
 echo -e "\n${BLUE}To monitor processing with detailed logs:${NC}"
 echo -e "${BLUE}  docker-compose --profile ingestion run --rm ${STORAGE_SERVICE_NAME} | tee ingestion.log${NC}"
+echo -e "\n${BLUE}To test multilingual OCR capabilities:${NC}"
+echo -e "${BLUE}  docker-compose run --rm ${STORAGE_SERVICE_NAME} python test_multilingual_ocr.py${NC}"

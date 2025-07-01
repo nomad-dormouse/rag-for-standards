@@ -20,9 +20,11 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     echo "Installing poppler-utils..."
     sudo apt-get install -y poppler-utils
     
-    # Install additional language packs if needed (uncomment as needed)
-    # sudo apt-get install -y tesseract-ocr-ukr  # Ukrainian
-    # sudo apt-get install -y tesseract-ocr-rus  # Russian
+    # Install additional language packs for multilingual support
+    echo "Installing language packs for Ukrainian and Russian..."
+    sudo apt-get install -y tesseract-ocr-ukr tesseract-ocr-rus
+    
+    # Install other language packs if needed (uncomment as needed)
     # sudo apt-get install -y tesseract-ocr-fra  # French
     # sudo apt-get install -y tesseract-ocr-deu  # German
     
@@ -36,9 +38,9 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
         exit 1
     fi
     
-    # Install Tesseract OCR
-    echo "Installing Tesseract OCR..."
-    brew install tesseract
+    # Install Tesseract OCR with language support
+    echo "Installing Tesseract OCR with language packs..."
+    brew install tesseract tesseract-lang
     
     # Install poppler for pdf2image
     echo "Installing poppler..."
