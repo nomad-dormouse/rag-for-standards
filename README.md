@@ -38,6 +38,7 @@ rag-for-standards/
 ├── docker-compose.yml        # Container orchestration
 ├── deploy.sh                # Local deployment script
 ├── deploy_remotely.sh       # Remote deployment script
+├── verify_ocr_deployment.sh # OCR functionality verification
 └── .env                     # Environment configuration
 ```
 
@@ -76,13 +77,11 @@ cd rag-for-standards
 cp .env.template .env
 # Edit .env with your settings
 
-# 3. Set up OCR dependencies (for enhanced PDF processing)
-cd rag_storage
-./setup_ocr.sh
-cd ..
-
-# 4. Deploy services
+# 3. Deploy services (OCR dependencies included automatically)
 ./deploy.sh
+
+# 4. Optional: Verify OCR functionality
+./verify_ocr_deployment.sh
 ```
 
 ## 📊 Features
@@ -117,17 +116,18 @@ The system now uses a three-tier approach to handle all PDF documents:
 
 ### OCR Setup
 
-For enhanced PDF processing capabilities:
+OCR dependencies are **automatically included** in the Docker containers. No manual setup required!
 
 ```bash
-# Install OCR dependencies
+# OCR is automatically available after deployment
+./deploy.sh
+
+# Optional: Verify OCR functionality
+./verify_ocr_deployment.sh
+
+# For local development outside Docker (optional):
 cd rag_storage
 ./setup_ocr.sh
-
-# Install Python packages
-pip install -r requirements_storage.txt
-
-# Test OCR functionality
 python test_ocr.py
 ```
 
@@ -189,15 +189,16 @@ The system processes 188 Ukrainian technical standards (5,167+ pages) including:
 If you encounter OCR-related problems:
 
 ```bash
-# Test OCR installation
+# Test OCR functionality in deployed containers
+./verify_ocr_deployment.sh
+
+# For manual testing (local development):
 cd rag_storage
 python test_ocr.py
 
-# Check Tesseract version
-tesseract --version
-
-# Check poppler installation
-pdftoppm -h
+# Check container OCR setup
+docker-compose run --rm storage tesseract --version
+docker-compose run --rm storage pdftoppm -h
 ```
 
 Common solutions:
