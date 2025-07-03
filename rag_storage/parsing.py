@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
 """
 PDF, DOC, DOCX parsing module for Ukrainian technical standards RAG system.
-Handles PDF text extraction with OCR fallback support.
+Handles PDF text extraction with 2-step fallback strategy.
 Supports Ukrainian, Russian, and English languages.
+Saves parsing results statistics to JSON, used parsing methods to CSV, and parsed pages to pickle.
 """
 
 import os
 import io
+import json
+import csv
+import pickle
 import fitz
 from contextlib import redirect_stderr
 from llama_index.core import SimpleDirectoryReader, Document
-from pdf2image import convert_from_path
 import pytesseract
 from PIL import Image
 
-def extract_text_with_reader(pdf_path: str, min_text_threshold: int) -> tuple[list[Document], str]:
+def extract_text_with_default_reader(pdf_path: str, min_text_threshold: int) -> tuple[list[Document], str]:
     try:
         stderr_capture = io.StringIO()
         with redirect_stderr(stderr_capture):
@@ -36,10 +39,10 @@ def extract_text_with_reader(pdf_path: str, min_text_threshold: int) -> tuple[li
         total_text_length = sum(len(page.text.strip()) for page in file_pages)
         empty_pages_in_file = sum(1 for page in file_pages if len(page.text.strip()) == 0)
         if not file_pages or total_text_length < min_text_threshold:
-            print(f"  No meaningful content extracted, trying OCR...")
+            print(f"  No meaningful content extracted...")
             raise Exception("Insufficient text content")
         if empty_pages_in_file == len(file_pages) and len(file_pages) > 0:
-            print(f"  All pages empty, likely scanned document, trying OCR...")
+            print(f"  All pages empty, likely scanned document...")
             raise Exception("All pages empty - likely scanned")
         
         return file_pages, None
@@ -47,7 +50,7 @@ def extract_text_with_reader(pdf_path: str, min_text_threshold: int) -> tuple[li
     except Exception as e:
         return [], str(e)
 
-def extract_text_with_pymupdf(pdf_path: str, min_text_threshold: int) -> list[Document]:
+def extract_text_with_pymupdf_and_ocr(pdf_path: str, min_text_threshold: int, statuses: dict) -> list[Document]:
     try:
         doc = fitz.open(pdf_path)
         documents = []
@@ -64,14 +67,14 @@ def extract_text_with_pymupdf(pdf_path: str, min_text_threshold: int) -> list[Do
                         ocr_text = pytesseract.image_to_string(img, lang='eng+ukr+rus')
                         if len(ocr_text.strip()) > len(text.strip()):
                             text = ocr_text
-                            extraction_method = 'PyMuPDF+OCR'
+                            extraction_method = statuses['ocr']
                         else:
-                            extraction_method = 'PyMuPDF'
+                            extraction_method = statuses['pymupdf']
                 except Exception as ocr_e:
                     print(f"    OCR fallback failed for page {page_num + 1}: {str(ocr_e)}")
-                    extraction_method = 'PyMuPDF'
+                    extraction_method = statuses['pymupdf']
             else:
-                extraction_method = 'PyMuPDF'
+                extraction_method = statuses['pymupdf']
             if len(text.strip()) > min_text_threshold:
                 document = Document(
                     text=text,
@@ -79,7 +82,6 @@ def extract_text_with_pymupdf(pdf_path: str, min_text_threshold: int) -> list[Do
                         'file_path': pdf_path,
                         'page_number': page_num + 1,
                         'extraction_method': extraction_method,
-                        'source': os.path.basename(pdf_path)
                     }
                 )
                 documents.append(document)
@@ -91,85 +93,67 @@ def extract_text_with_pymupdf(pdf_path: str, min_text_threshold: int) -> list[Do
         print(f"  PyMuPDF extraction failed for {pdf_path}: {str(e)}")
         return []
 
-def extract_text_with_ocr(pdf_path: str, min_text_threshold: int) -> list[Document]:
-    try:
-        print(f"  Running OCR on {os.path.basename(pdf_path)}...")
-        pages = convert_from_path(pdf_path, dpi=300)
-        documents = []
-        
-        for page_num, page_image in enumerate(pages):
-            print(f"    Processing page {page_num + 1}/{len(pages)}")
-            text = pytesseract.image_to_string(page_image, lang='eng+ukr+rus')
-            if len(text.strip()) > min_text_threshold:
-                doc = Document(
-                    text=text,
-                    metadata={
-                        'file_path': pdf_path,
-                        'page_number': page_num + 1,
-                        'extraction_method': 'OCR',
-                        'source': os.path.basename(pdf_path)
-                    }
-                )
-                documents.append(doc)
-            else:
-                print(f"      Page {page_num + 1} has insufficient text content (OCR)")
-        
-        return documents
-        
-    except Exception as e:
-        print(f"  OCR failed for {pdf_path}: {str(e)}")
-        return []
-
-def process_document_with_fallbacks(document_path: str, min_text_threshold: int) -> tuple[list[Document], str, str]:
+def parse_document_with_fallback(document_path: str, min_text_threshold: int) -> tuple[list[Document], str, str]:
+    statuses={
+        "default": "ParsedWithDefaultReader",
+        "pymupdf": "ParsedWithPyMuPDF",
+        "ocr": "ParsedWithPyMuPDFAndOCR",
+        "failed": "FailedToParse"
+    }
     print(f"Processing: {os.path.basename(document_path)}")
     
     # Strategy 1: Try LlamaIndex SimpleDirectoryReader (works for PDF, DOC, DOCX)
-    file_pages, error_message = extract_text_with_reader(document_path, min_text_threshold)
+    file_pages, error_message = extract_text_with_default_reader(document_path, min_text_threshold)
     if file_pages:
-        return file_pages, 'ParsedWithReader', None
+        return file_pages, statuses['default'], None
     
-    # For PDF files only, try additional fallback strategies
+    # For PDF files only, try additional fallback strategy
     if document_path.lower().endswith('.pdf'):
         original_error = error_message
         
-        # Strategy 2: Try alternative PDF parser (PyMuPDF)
-        print(f"  Trying PyMuPDF extraction...")
-        pymupdf_pages = extract_text_with_pymupdf(document_path, min_text_threshold)
+        # Strategy 2: Try alternative PDF parser (PyMuPDF) and OCR if needed
+        print(f"  Trying alternative parser PyMuPDF + OCR if needed...")
+        pymupdf_pages = extract_text_with_pymupdf_and_ocr(document_path, min_text_threshold, statuses)
         if pymupdf_pages and len(pymupdf_pages) > 0:
             total_text = sum(len(page.text.strip()) for page in pymupdf_pages)
             if total_text > min_text_threshold:
-                return pymupdf_pages, 'ParsedWithPyMuPDF', None
-        
-        # Strategy 3: Full OCR processing
-        print(f"  Trying full OCR processing...")
-        ocr_pages = extract_text_with_ocr(document_path, min_text_threshold)
-        if ocr_pages and len(ocr_pages) > 0:
-            return ocr_pages, 'ParsedWithOCR', None
+                # Check if any page used OCR
+                used_ocr = any(page.metadata.get('extraction_method') == 'PyMuPDFAndOCR' for page in pymupdf_pages)
+                status = statuses['ocr'] if used_ocr else statuses['pymupdf']
+                return pymupdf_pages, status, None
         
         # All strategies failed
-        if 'corrupted' in original_error.lower() or 'corruption' in original_error.lower():
-            return [], 'Corrupted', original_error
-        elif 'scanned' in original_error.lower() or 'empty' in original_error.lower():
-            return [], 'Scanned', original_error
-        else:
-            return [], 'Exception', original_error
+        return [], statuses['failed'], original_error
     else:
-        # For non-PDF files, if LlamaIndex failed, mark as exception
-        return [], 'Exception', error_message
+        # For non-PDF files, if LlamaIndex failed, mark as not parsed
+        return [], statuses['failed'], error_message
 
-def parse_all_documents(standards_dir: str, min_text_threshold: int) -> tuple[list[Document], dict]:
-    parsing_results = {
+def load_all_documents(standards_dir: str) -> list[str]:
+    """Load and return list of document file paths from standards directory."""
+    print(f"Loading Ukrainian technical standards from: {standards_dir}...")
+    files = []
+    for root, dirs, dir_files in os.walk(standards_dir):
+        for file in dir_files:
+            if file.lower().endswith(('.pdf', '.doc', '.docx')):
+                files.append(os.path.join(root, file))
+    print(f"Found {len(files)} files to process.")
+    return files
+
+def calculate_statistics(files: list[str], all_pages_length: int, successfully_parsed_pages: list) -> dict:
+    """Calculate and return complete statistics as JSON object."""
+    # Initialise complete statistics structure
+    parsing_results_statistics = {
         'files_statistics': {
-            'total_loaded': 0,
-            'total_pdf_loaded': 0,
-            'total_doc_loaded': 0,
-            'total_docx_loaded': 0,
+            'total_loaded': len(files),
+            'total_pdf_loaded': len([f for f in files if f.lower().endswith('.pdf')]),
+            'total_doc_loaded': len([f for f in files if f.lower().endswith('.doc')]),
+            'total_docx_loaded': len([f for f in files if f.lower().endswith('.docx')]),
             'parsed_successfully': 0,
             'parsed_successfully_percentage': 0,
             'failed_to_parse': 0,
             'failed_to_parse_percentage': 0,
             'files': {
-                'ParsedWithReader': {
+                'ParsedWithDefaultReader': {
                     'count': 0,
                     'percentage': 0,
                     'files': []
@@ -179,27 +163,12 @@ def parse_all_documents(standards_dir: str, min_text_threshold: int) -> tuple[li
                     'percentage': 0,
                     'files': []
                 },
-                'ParsedWithOCR': {
+                'ParsedWithPyMuPDFAndOCR': {
                     'count': 0,
                     'percentage': 0,
                     'files': []
                 },
-                'Corrupted': {
-                    'count': 0,
-                    'percentage': 0,
-                    'files': []
-                },
-                'Scanned': {
-                    'count': 0,
-                    'percentage': 0,
-                    'files': []
-                },
-                'Empty': {
-                    'count': 0,
-                    'percentage': 0,
-                    'files': []
-                },
-                'Exception': {
+                'NotParsed': {
                     'count': 0,
                     'percentage': 0,
                     'files': []
@@ -207,7 +176,7 @@ def parse_all_documents(standards_dir: str, min_text_threshold: int) -> tuple[li
             }
         },
         'pages_statistics': {
-            'total_loaded': 0,
+            'total_loaded': all_pages_length,
             'not_empty': 0,
             'not_empty_percentage': 0,
             'empty': 0,
@@ -216,81 +185,92 @@ def parse_all_documents(standards_dir: str, min_text_threshold: int) -> tuple[li
         'report_text': '',
     }
     
-    print(f"Loading Ukrainian technical standards from: {standards_dir}...")
-    files = []
-    for root, dirs, dir_files in os.walk(standards_dir):
-        for file in dir_files:
-            if file.lower().endswith(('.pdf', '.doc', '.docx')):
-                files.append(os.path.join(root, file))
-    parsing_results['files_statistics']['total_loaded'] = len(files)
-    pdf_files = [f for f in files if f.lower().endswith('.pdf')]
-    doc_files = [f for f in files if f.lower().endswith('.doc')]
-    docx_files = [f for f in files if f.lower().endswith('.docx')]
-    parsing_results['files_statistics']['total_pdf_loaded'] = len(pdf_files)
-    parsing_results['files_statistics']['total_doc_loaded'] = len(doc_files)
-    parsing_results['files_statistics']['total_docx_loaded'] = len(docx_files)
-    print(f"Found {parsing_results['files_statistics']['total_loaded']} files to process: {len(pdf_files)} PDF, {len(doc_files)} DOC, {len(docx_files)} DOCX")
+    # Calculate file statistics
+    parsing_results_statistics['files_statistics']['files']['ParsedWithDefaultReader']['count'] = len(parsing_results_statistics['files_statistics']['files']['ParsedWithDefaultReader']['files'])
+    parsing_results_statistics['files_statistics']['files']['ParsedWithDefaultReader']['percentage'] = (parsing_results_statistics['files_statistics']['files']['ParsedWithDefaultReader']['count'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0
+    parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['count'] = len(parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['files'])
+    parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['percentage'] = (parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['count'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0
+    parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['count'] = len(parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['files'])
+    parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['percentage'] = (parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['count'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0
+    parsing_results_statistics['files_statistics']['parsed_successfully'] = parsing_results_statistics['files_statistics']['files']['ParsedWithDefaultReader']['count'] + parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['count'] + parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['count']
+    parsing_results_statistics['files_statistics']['parsed_successfully_percentage'] = (parsing_results_statistics['files_statistics']['parsed_successfully'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0
+    parsing_results_statistics['files_statistics']['files']['NotParsed']['count'] = len(parsing_results_statistics['files_statistics']['files']['NotParsed']['files'])
+    parsing_results_statistics['files_statistics']['files']['NotParsed']['percentage'] = (parsing_results_statistics['files_statistics']['files']['NotParsed']['count'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0
+    parsing_results_statistics['files_statistics']['failed_to_parse'] = parsing_results_statistics['files_statistics']['files']['NotParsed']['count']
+    parsing_results_statistics['files_statistics']['failed_to_parse_percentage'] = (parsing_results_statistics['files_statistics']['failed_to_parse'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0
+    
+    # Calculate page statistics
+    parsing_results_statistics['pages_statistics']['not_empty'] = len(successfully_parsed_pages)
+    parsing_results_statistics['pages_statistics']['not_empty_percentage'] = (parsing_results_statistics['pages_statistics']['not_empty'] / parsing_results_statistics['pages_statistics']['total_loaded'] * 100) if parsing_results_statistics['pages_statistics']['total_loaded'] > 0 else 0
+    parsing_results_statistics['pages_statistics']['empty'] = parsing_results_statistics['pages_statistics']['total_loaded'] - parsing_results_statistics['pages_statistics']['not_empty']
+    parsing_results_statistics['pages_statistics']['empty_percentage'] = (parsing_results_statistics['pages_statistics']['empty'] / parsing_results_statistics['pages_statistics']['total_loaded'] * 100) if parsing_results_statistics['pages_statistics']['total_loaded'] > 0 else 0
+    
+    # Generate report text
+    parsing_results_statistics['report_text'] = f"""
+PARSING REPORT
+
+Files statistics:
+🔢 Total files parsed: {parsing_results_statistics['files_statistics']['total_loaded']:,}
+  - PDF files: {parsing_results_statistics['files_statistics']['total_pdf_loaded']:,}
+  - DOC files: {parsing_results_statistics['files_statistics']['total_doc_loaded']:,}
+  - DOCX files: {parsing_results_statistics['files_statistics']['total_docx_loaded']:,}
+✅ Files successfully parsed: {parsing_results_statistics['files_statistics']['parsed_successfully']:,} files ({parsing_results_statistics['files_statistics']['parsed_successfully_percentage']:.1f}%)
+   - With Default Reader: {parsing_results_statistics['files_statistics']['files']['ParsedWithDefaultReader']['count']:,} files ({parsing_results_statistics['files_statistics']['files']['ParsedWithDefaultReader']['percentage']:.1f}%)
+   - With PyMuPDF: {parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['count']:,} files ({parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['percentage']:.1f}%)
+   - With PyMuPDF and OCR: {parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['count']:,} files ({parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['percentage']:.1f}%)
+❌ Files failed to parse: {parsing_results_statistics['files_statistics']['files']['NotParsed']['count']:,} files ({parsing_results_statistics['files_statistics']['files']['NotParsed']['percentage']:.1f}%)
+
+Pages statistics:
+🔢 Total pages loaded: {parsing_results_statistics['pages_statistics']['total_loaded']:,}
+✅ Non-empty pages: {parsing_results_statistics['pages_statistics']['not_empty']:,} ({parsing_results_statistics['pages_statistics']['not_empty_percentage']:.1f}%)
+❌ Empty pages: {parsing_results_statistics['pages_statistics']['empty']:,} ({parsing_results_statistics['pages_statistics']['empty_percentage']:.1f}%)
+"""
+    
+    return parsing_results_statistics
+
+def save_parsing_results(files: list[str], all_pages_length: int, successfully_parsed_pages: list, json_file: str, csv_file: str, pickle_file: str):
+    """Calculate statistics and save parsing results statistics to JSON file, CSV file, and parsed pages to pickle file."""
+    # Calculate parsing results statistics
+    parsing_results_statistics = calculate_statistics(files, all_pages_length, successfully_parsed_pages)
+
+    # Save parsing results statistics to JSON file
+    with open(json_file, 'w', encoding='utf-8') as f:
+        json.dump(parsing_results_statistics, f, indent=2, ensure_ascii=False, default=str)
+    print(f"📊 Parsing results statistics saved to: {json_file}")
+    
+    # Save files processing methods to CSV file
+    with open(csv_file, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(['File', 'Processing method'])
+        for parsing_method, data in parsing_results_statistics['files_statistics']['files'].items():
+            for file_path in data['files']:
+                writer.writerow([file_path, parsing_method])
+    print(f"📁 Files parsing methods saved to: {csv_file}")
+    
+    # Save parsed pages to pickle file
+    with open(pickle_file, 'wb') as f:
+        pickle.dump(successfully_parsed_pages, f)
+    print(f"💾 Parsed pages saved to: {pickle_file}")
+
+    # Display parsing report
+    print(parsing_results_statistics['report_text'])
+
+def parse_all_documents(standards_dir: str, min_text_threshold: int, json_file: str, csv_file: str, pickle_file: str) -> list[Document]:
+    """Load and process document files from standards directory, save results, and return parsed pages."""
+    files = load_all_documents(standards_dir)
     
     all_pages = []
     for file in files:
-        pages, status, error_details = process_document_with_fallbacks(file, min_text_threshold)
-        relative_path = os.path.relpath(file, standards_dir)
-        parsing_results['files_statistics']['files'][status]['files'].append(relative_path)
+        pages, status, error_details = parse_document_with_fallback(file, min_text_threshold)
         if error_details:
             print(f"  Final status: {status} - {error_details}")
         else:
             print(f"  Final status: {status} - {len(pages)} pages extracted")
         all_pages.extend(pages)
-    parsing_results['pages_statistics']['total_loaded'] = len(all_pages)
-    print(f"Loaded {parsing_results['pages_statistics']['total_loaded']} pages from {parsing_results['files_statistics']['total_loaded']} files")
+    all_pages_length = len(all_pages)
+    print(f"Loaded {all_pages_length} pages from {len(files)} files")
     
-    parsing_results['files_statistics']['files']['ParsedWithReader']['count'] = len(parsing_results['files_statistics']['files']['ParsedWithReader']['files'])
-    parsing_results['files_statistics']['files']['ParsedWithReader']['percentage'] = (parsing_results['files_statistics']['files']['ParsedWithReader']['count'] / parsing_results['files_statistics']['total_loaded'] * 100) if parsing_results['files_statistics']['total_loaded'] > 0 else 0
-    parsing_results['files_statistics']['files']['ParsedWithPyMuPDF']['count'] = len(parsing_results['files_statistics']['files']['ParsedWithPyMuPDF']['files'])
-    parsing_results['files_statistics']['files']['ParsedWithPyMuPDF']['percentage'] = (parsing_results['files_statistics']['files']['ParsedWithPyMuPDF']['count'] / parsing_results['files_statistics']['total_loaded'] * 100) if parsing_results['files_statistics']['total_loaded'] > 0 else 0
-    parsing_results['files_statistics']['files']['ParsedWithOCR']['count'] = len(parsing_results['files_statistics']['files']['ParsedWithOCR']['files'])
-    parsing_results['files_statistics']['files']['ParsedWithOCR']['percentage'] = (parsing_results['files_statistics']['files']['ParsedWithOCR']['count'] / parsing_results['files_statistics']['total_loaded'] * 100) if parsing_results['files_statistics']['total_loaded'] > 0 else 0
-    parsing_results['files_statistics']['parsed_successfully'] = parsing_results['files_statistics']['files']['ParsedWithReader']['count'] + parsing_results['files_statistics']['files']['ParsedWithPyMuPDF']['count'] + parsing_results['files_statistics']['files']['ParsedWithOCR']['count']
-    parsing_results['files_statistics']['parsed_successfully_percentage'] = (parsing_results['files_statistics']['parsed_successfully'] / parsing_results['files_statistics']['total_loaded'] * 100) if parsing_results['files_statistics']['total_loaded'] > 0 else 0
-    parsing_results['files_statistics']['files']['Corrupted']['count'] = len(parsing_results['files_statistics']['files']['Corrupted']['files'])
-    parsing_results['files_statistics']['files']['Corrupted']['percentage'] = (parsing_results['files_statistics']['files']['Corrupted']['count'] / parsing_results['files_statistics']['total_loaded'] * 100) if parsing_results['files_statistics']['total_loaded'] > 0 else 0
-    parsing_results['files_statistics']['files']['Scanned']['count'] = len(parsing_results['files_statistics']['files']['Scanned']['files'])
-    parsing_results['files_statistics']['files']['Scanned']['percentage'] = (parsing_results['files_statistics']['files']['Scanned']['count'] / parsing_results['files_statistics']['total_loaded'] * 100) if parsing_results['files_statistics']['total_loaded'] > 0 else 0
-    parsing_results['files_statistics']['files']['Empty']['count'] = len(parsing_results['files_statistics']['files']['Empty']['files'])
-    parsing_results['files_statistics']['files']['Empty']['percentage'] = (parsing_results['files_statistics']['files']['Empty']['count'] / parsing_results['files_statistics']['total_loaded'] * 100) if parsing_results['files_statistics']['total_loaded'] > 0 else 0
-    parsing_results['files_statistics']['files']['Exception']['count'] = len(parsing_results['files_statistics']['files']['Exception']['files'])
-    parsing_results['files_statistics']['files']['Exception']['percentage'] = (parsing_results['files_statistics']['files']['Exception']['count'] / parsing_results['files_statistics']['total_loaded'] * 100) if parsing_results['files_statistics']['total_loaded'] > 0 else 0
-    parsing_results['files_statistics']['failed_to_parse'] = parsing_results['files_statistics']['files']['Corrupted']['count'] + parsing_results['files_statistics']['files']['Scanned']['count'] + parsing_results['files_statistics']['files']['Empty']['count'] + parsing_results['files_statistics']['files']['Exception']['count']
-    parsing_results['files_statistics']['failed_to_parse_percentage'] = (parsing_results['files_statistics']['failed_to_parse'] / parsing_results['files_statistics']['total_loaded'] * 100) if parsing_results['files_statistics']['total_loaded'] > 0 else 0
-    print(f"Successfully extracted text from {parsing_results['files_statistics']['parsed_successfully']} files")
-    
-    pages_for_indexing = [page for page in all_pages if len(page.text.strip()) > 0]
-    parsing_results['pages_statistics']['not_empty'] = len(pages_for_indexing)
-    parsing_results['pages_statistics']['not_empty_percentage'] = (parsing_results['pages_statistics']['not_empty'] / parsing_results['pages_statistics']['total_loaded'] * 100) if parsing_results['pages_statistics']['total_loaded'] > 0 else 0
-    parsing_results['pages_statistics']['empty'] = parsing_results['pages_statistics']['total_loaded'] - parsing_results['pages_statistics']['not_empty']
-    parsing_results['pages_statistics']['empty_percentage'] = (parsing_results['pages_statistics']['empty'] / parsing_results['pages_statistics']['total_loaded'] * 100) if parsing_results['pages_statistics']['total_loaded'] > 0 else 0
-    print(f"Filtered {parsing_results['pages_statistics']['not_empty']} non-empty pages for indexing")
-    
-    parsing_results['report_text'] = f"""
-PARSING REPORT
+    successfully_parsed_pages = [page for page in all_pages if len(page.text.strip()) > 0]
+    save_parsing_results(files, all_pages_length, successfully_parsed_pages, json_file, csv_file, pickle_file)
 
-🔢 Total files parsed: {parsing_results['files_statistics']['total_loaded']:,}
-  - PDF files: {parsing_results['files_statistics']['total_pdf_loaded']:,}
-  - DOC files: {parsing_results['files_statistics']['total_doc_loaded']:,}
-  - DOCX files: {parsing_results['files_statistics']['total_docx_loaded']:,}
-✅ Files successfully parsed: {parsing_results['files_statistics']['parsed_successfully']:,} files ({parsing_results['files_statistics']['parsed_successfully_percentage']:.1f}%)
-   - With Reader: {parsing_results['files_statistics']['files']['ParsedWithReader']['count']:,} files ({parsing_results['files_statistics']['files']['ParsedWithReader']['percentage']:.1f}%)
-   - With PyMuPDF: {parsing_results['files_statistics']['files']['ParsedWithPyMuPDF']['count']:,} files ({parsing_results['files_statistics']['files']['ParsedWithPyMuPDF']['percentage']:.1f}%)
-   - With OCR: {parsing_results['files_statistics']['files']['ParsedWithOCR']['count']:,} files ({parsing_results['files_statistics']['files']['ParsedWithOCR']['percentage']:.1f}%)
-❌ Files failed to parse: {parsing_results['files_statistics']['failed_to_parse']:,} files ({parsing_results['files_statistics']['failed_to_parse_percentage']:.1f}%)
-   - Corrupted: {parsing_results['files_statistics']['files']['Corrupted']['count']:,} files ({parsing_results['files_statistics']['files']['Corrupted']['percentage']:.1f}%)
-   - Scanned: {parsing_results['files_statistics']['files']['Scanned']['count']:,} files ({parsing_results['files_statistics']['files']['Scanned']['percentage']:.1f}%)
-   - Empty: {parsing_results['files_statistics']['files']['Empty']['count']:,} files ({parsing_results['files_statistics']['files']['Empty']['percentage']:.1f}%)
-   - Exception: {parsing_results['files_statistics']['files']['Exception']['count']:,} files ({parsing_results['files_statistics']['files']['Exception']['percentage']:.1f}%)
-
-Total pages loaded: {parsing_results['pages_statistics']['total_loaded']:,}
-✅ Non-empty: {parsing_results['pages_statistics']['not_empty']:,} ({parsing_results['pages_statistics']['not_empty_percentage']:.1f}%)
-❌ Empty: {parsing_results['pages_statistics']['empty']:,} ({parsing_results['pages_statistics']['empty_percentage']:.1f}%)
-"""
-    
-    return pages_for_indexing, parsing_results
+    return successfully_parsed_pages

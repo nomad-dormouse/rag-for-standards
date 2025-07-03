@@ -1,15 +1,15 @@
 # Project specifics
 rag_storage/index/
 rag_webapp/index/
-parsing_results.csv
-ingestion_report.json
+*.json
+*.csv
 *.pkl
+*.log
 .env
 .env.local
 .env.*.local
 .dockerignore
 docker-compose.override.yml
-*.log
 
 # Python
 __pycache__/

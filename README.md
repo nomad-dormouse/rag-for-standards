@@ -21,7 +21,6 @@ rag-for-standards/
 │   ├── parsing.py            # Document parsing with OCR fallback
 │   ├── embedding.py          # Vector embedding and indexing
 │   ├── ingestion.py          # Pipeline orchestrator
-│   ├── test_parsing.py       # Parsing functionality tester
 │   └── requirements_storage.txt
 ├── rag_webapp/                # Web application service
 │   ├── dockerfile_webapp     # Docker image for web interface
@@ -90,11 +89,3 @@ After deployment:
 2. **Ask Questions**: Enter queries about technical standards
 3. **Compare Responses**: See answers with/without standards access
 4. **Review Sources**: View retrieved document chunks
-
-## 🔧 Testing
-
-```bash
-# Test parsing locally
-cd rag_storage
-python test_parsing_local.py
-```
