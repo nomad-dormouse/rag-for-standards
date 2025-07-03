@@ -1,7 +1,9 @@
 # Project specifics
 rag_storage/index/
 rag_webapp/index/
+parsing_results.csv
 ingestion_report.json
+*.pkl
 .env
 .env.local
 .env.*.local

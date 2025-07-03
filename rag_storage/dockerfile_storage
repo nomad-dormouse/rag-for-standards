@@ -18,9 +18,6 @@ RUN apt-get update && \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Set Tesseract data path environment variable
-ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/4.00/tessdata
-
 # Install Python dependencies
 ARG STORAGE_REQUIREMENTS_NAME
 RUN pip install --upgrade pip && \
@@ -31,4 +28,4 @@ RUN pip install --upgrade pip && \
 VOLUME ["/${CONTAINER_WORKDIR_NAME}/index"]
 
 # Run standards ingestion
-CMD ["python", "ingest.py"]
+CMD ["python", "ingestion.py"]

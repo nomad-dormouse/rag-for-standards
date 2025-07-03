@@ -56,8 +56,8 @@ docker volume prune -f 2>/dev/null || true
 
 # Run one-time standards ingestion service
 echo -e "${BLUE}Building and running standards ingestion service (one-time job)...${NC}"
-docker-compose --profile ingestion build ${STORAGE_SERVICE_NAME}
-docker-compose --profile ingestion run --rm ${STORAGE_SERVICE_NAME}
+docker-compose build ${STORAGE_SERVICE_NAME}
+docker-compose run --rm ${STORAGE_SERVICE_NAME} python ${INGESTION_FILE_NAME}
 if [ $? -ne 0 ]; then
     echo -e "${RED}Standards ingestion failed${NC}"
     exit 1

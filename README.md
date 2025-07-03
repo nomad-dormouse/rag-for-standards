@@ -1,21 +1,14 @@
 # RAG for Ukrainian Technical Standards
 
-A bilingual Retrieval-Augmented Generation (RAG) system for searching and answering questions about Ukrainian technical documentation standards using Docker containerisation. **Now with enhanced OCR support for processing all PDF types, including corrupted and scanned documents.**
+A multilingual Retrieval-Augmented Generation (RAG) system for searching and answering questions about Ukrainian technical documentation standards. Supports PDF, DOC, and DOCX files with enhanced OCR processing.
 
 ## 🚀 Quick Start
 
-### Local Deployment
 ```bash
-# Clone and deploy locally
+# Clone and deploy
 git clone https://github.com/nomad-dormouse/rag-for-standards.git
 cd rag-for-standards
 ./deploy.sh
-```
-
-### Remote Deployment
-```bash
-# Deploy to remote server (requires SSH key setup)
-./deploy_remotely.sh
 ```
 
 ## 📁 Project Structure
@@ -23,12 +16,13 @@ cd rag-for-standards
 ```
 rag-for-standards/
 ├── rag_storage/               # Document processing service
-│   ├── standards/             # Ukrainian technical standards (PDFs)
+│   ├── standards/             # Technical standards (PDF, DOC, DOCX)
 │   ├── dockerfile_storage     # Docker image for document ingestion
-│   ├── ingest.py             # Enhanced document processing with OCR
-│   ├── setup_ocr.sh          # OCR dependencies installer
-│   ├── test_multilingual_ocr.py # Comprehensive OCR functionality tester
-│   └── requirements_storage.txt # Includes OCR dependencies
+│   ├── parsing.py            # Document parsing with OCR fallback
+│   ├── embedding.py          # Vector embedding and indexing
+│   ├── ingestion.py          # Pipeline orchestrator
+│   ├── test_parsing.py       # Parsing functionality tester
+│   └── requirements_storage.txt
 ├── rag_webapp/                # Web application service
 │   ├── dockerfile_webapp     # Docker image for web interface
 │   ├── webapp.py            # Streamlit application
@@ -38,131 +32,51 @@ rag-for-standards/
 ├── docker-compose.yml        # Container orchestration
 ├── deploy.sh                # Local deployment script
 ├── deploy_remotely.sh       # Remote deployment script
-├── verify_ocr_deployment.sh # OCR functionality verification
 └── .env                     # Environment configuration
 ```
 
 ## 🛠️ Configuration
 
-Copy the template and configure your environment:
-
 ```bash
 cp .env.template .env
-# Edit .env with your actual values
+# Edit .env with your OpenAI API key
 ```
 
-**Required settings:**
-- `OPENAI_API_KEY`: Your OpenAI API key ([get one here](https://platform.openai.com/api-keys))
+**Required:**
+- `OPENAI_API_KEY`: Your OpenAI API key
 - `WEBAPP_PORT`: Port for web interface (default: 8501)
-
-**Optional settings (for remote deployment):**
-- `REMOTE_HOST`: Your server IP address
-- `REMOTE_USER`: SSH username (usually 'root')
-- `SSH_KEY`: Path to your SSH private key
-
-## 🔧 Manual Setup
-
-### Prerequisites
-- Docker & Docker Compose
-- OpenAI API key
-- SSH key (for remote deployment)
-
-### Local Development
-```bash
-# 1. Clone repository
-git clone https://github.com/nomad-dormouse/rag-for-standards.git
-cd rag-for-standards
-
-# 2. Configure environment
-cp .env.template .env
-# Edit .env with your settings
-
-# 3. Deploy services (OCR dependencies included automatically)
-./deploy.sh
-
-# 4. Optional: Verify OCR functionality
-./verify_ocr_deployment.sh
-```
 
 ## 📊 Features
 
-- **Enhanced PDF Processing**: Handles all PDF types including corrupted and scanned documents with OCR
-- **Multilingual OCR**: Supports English, Ukrainian, and Russian text recognition
-- **Multi-tier Extraction**: Automatic fallback from standard parsing to PyMuPDF to full OCR
-- **Bilingual Interface**: Switch between English 🇬🇧 and Ukrainian 🇺🇦 instantly
-- **Dual Response Mode**: Compare answers with and without access to standards
-- **Docker Containerisation**: Isolated services with optimised architecture
-- **One-time Ingestion**: Storage service runs once to build index, then webapp serves queries
-- **Remote Deployment**: One-command deployment to remote servers with Git LFS support
-- **RAG Pipeline**: Advanced retrieval with similarity search and source transparency
-- **Web Interface**: User-friendly Streamlit application with progressive loading
+- **Multi-format Support**: PDF, DOC, DOCX files
+- **Enhanced OCR**: Handles corrupted and scanned documents
+- **Multilingual**: English, Ukrainian, Russian text recognition
+- **Bilingual Interface**: English 🇬🇧 and Ukrainian 🇺🇦
+- **Dual Response Mode**: Compare with/without standards access
+- **Docker Containerisation**: Isolated services
+- **Modular Architecture**: Clean separation of parsing, embedding, and web interface
 
-## 🔍 Enhanced PDF Processing
+## 🔍 Document Processing
 
-The system now uses a three-tier approach to handle all PDF documents:
+### Processing Strategy
 
-### Processing Strategies
+1. **Standard Extraction** (LlamaIndex)
+   - Fast processing for well-formed documents
+   - Works with PDF, DOC, DOCX files
 
-1. **Standard Extraction** (LlamaIndex SimpleDirectoryReader)
-   - Fast processing for well-formed PDFs
-   - Automatically detects corruption warnings
+2. **Alternative PDF Parser** (PyMuPDF)
+   - Robust parsing for partially corrupted PDFs
+   - Selective OCR for problematic pages
 
-2. **Robust Extraction** (PyMuPDF with selective OCR)
-   - More robust PDF parsing for partially corrupted documents
-   - Applies OCR to individual pages when needed
-
-3. **Full OCR Processing** (Tesseract OCR)
-   - Converts entire PDF to images and runs OCR
-   - Handles completely scanned or corrupted documents
-
-### OCR Setup
-
-OCR dependencies are **automatically included** in the Docker containers. No manual setup required!
-
-```bash
-# OCR is automatically available after deployment
-./deploy.sh
-
-# Optional: Verify OCR functionality
-./verify_ocr_deployment.sh
-
-# For local development outside Docker (optional):
-cd rag_storage
-./setup_ocr.sh
-python test_multilingual_ocr.py
-```
+3. **Full OCR Processing** (Tesseract)
+   - Converts PDF pages to images
+   - Handles completely scanned documents
 
 ### Language Support
 
-The OCR system **automatically supports multiple languages**:
-
-- ✅ **English** - Built-in support
-- ✅ **Ukrainian** - Automatically included
-- ✅ **Russian** - Automatically included
-
-The system will automatically detect and process text in any of these languages within the same document.
-
-```bash
-# Language packs are automatically installed in Docker
-# For local development, install additional languages:
-sudo apt-get install tesseract-ocr-fra  # French
-sudo apt-get install tesseract-ocr-deu  # German
-```
-
-### Processing Results
-
-The enhanced pipeline provides detailed reporting:
-
-```
-Files parsing
-- Total files: 188
-- Successfully parsed (original): 150
-- Successfully parsed (PyMuPDF): 20
-- Successfully parsed (OCR): 15
-- Total successful: 185 (98.4%)
-- Corrupted PDFs: 2
-- Scanned documents (failed): 1
-```
+- ✅ **English** - International standards
+- ✅ **Ukrainian** - ДСТУ standards  
+- ✅ **Russian** - Legacy GOST standards
 
 ## 🌐 Access
 
@@ -170,61 +84,17 @@ After deployment:
 - **Local**: http://localhost:8501
 - **Remote**: http://your-server-ip:8501
 
-## 📚 Document Collection
-
-The system processes 188 Ukrainian technical standards (5,167+ pages) including:
-- ДСТУ ISO standards
-- Technical documentation standards
-- Optical and measurement standards
-- **Now supports corrupted and scanned documents through OCR**
-
 ## 🔍 Usage
 
-1. **Choose Language**: Click 🇬🇧 English or 🇺🇦 Українська buttons at the top
-2. **Ask Questions**: Enter queries in English or Ukrainian about technical standards
-3. **Compare Responses**: Receive two AI-generated responses:
-   - 💭 **Without Standards**: General AI knowledge response
-   - 📚 **With Standards**: Response based on retrieved document content
-4. **Review Sources**: View retrieved document chunks with similarity scores
+1. **Choose Language**: Click 🇬🇧 English or 🇺🇦 Українська
+2. **Ask Questions**: Enter queries about technical standards
+3. **Compare Responses**: See answers with/without standards access
+4. **Review Sources**: View retrieved document chunks
 
-## 🔧 Troubleshooting
-
-### OCR Issues
-
-If you encounter OCR-related problems:
+## 🔧 Testing
 
 ```bash
-# Test OCR functionality in deployed containers
-./verify_ocr_deployment.sh
-
-# For manual testing (local development):
+# Test parsing locally
 cd rag_storage
-python test_multilingual_ocr.py
-
-# Check container OCR setup
-docker-compose run --rm storage tesseract --version
-docker-compose run --rm storage pdftoppm -h
+python test_parsing_local.py
 ```
-
-Common solutions:
-- **Linux**: `sudo apt-get install tesseract-ocr poppler-utils`
-- **macOS**: `brew install tesseract poppler`
-
-### Performance Considerations
-
-- **Normal PDFs**: Processing time unchanged (~1-2 seconds each)
-- **OCR PDFs**: Longer processing time (~10-30 seconds per page)
-- **Memory**: OCR processing is memory-intensive for large documents
-- **Disk Space**: Temporary images created during OCR (automatically cleaned up)
-
-The enhanced system maintains backward compatibility while dramatically improving document processing success rates from ~50% to ~95%+.
-
-### 🌐 Multilingual OCR Support
-
-Your system now automatically handles documents in **three languages**:
-
-- **English** - International standards, technical documentation
-- **Ukrainian** - ДСТУ standards, local technical documents  
-- **Russian** - Legacy documents, GOST standards
-
-The OCR system will automatically detect and process text in any combination of these languages within the same document, making it perfect for processing diverse technical documentation collections.
