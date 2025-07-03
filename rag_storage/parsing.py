@@ -39,7 +39,7 @@ def extract_text_with_default_reader(pdf_path: str, min_text_threshold: int) -> 
         total_text_length = sum(len(page.text.strip()) for page in file_pages)
         empty_pages_in_file = sum(1 for page in file_pages if len(page.text.strip()) == 0)
         if not file_pages or total_text_length < min_text_threshold:
-            print(f"  No meaningful content extracted...")
+            print(f"  No meaningful content extracted with default reader...")
             raise Exception("Insufficient text content")
         if empty_pages_in_file == len(file_pages) and len(file_pages) > 0:
             print(f"  All pages empty, likely scanned document...")
