@@ -18,7 +18,7 @@ rag-for-standards/
 ├── rag_storage/               # Document processing service
 │   ├── standards/             # Technical standards (PDF, DOC, DOCX)
 │   ├── dockerfile_storage     # Docker image for document ingestion
-│   ├── parsing.py            # Document parsing with OCR fallback
+│   ├── parsing.py            # Document parsing with smart OCR
 │   ├── embedding.py          # Vector embedding and indexing
 │   ├── ingestion.py          # Pipeline orchestrator
 │   └── requirements_storage.txt
@@ -48,7 +48,7 @@ cp .env.template .env
 ## 📊 Features
 
 - **Multi-format Support**: PDF, DOC, DOCX files
-- **Enhanced OCR**: Handles corrupted and scanned documents
+- **Smart OCR**: Selective OCR processing for problematic pages only
 - **Multilingual**: English, Ukrainian, Russian text recognition
 - **Bilingual Interface**: English 🇬🇧 and Ukrainian 🇺🇦
 - **Dual Response Mode**: Compare with/without standards access
@@ -63,13 +63,9 @@ cp .env.template .env
    - Fast processing for well-formed documents
    - Works with PDF, DOC, DOCX files
 
-2. **Alternative PDF Parser** (PyMuPDF)
+2. **Enhanced PDF Parser** (PyMuPDF + Smart OCR)
    - Robust parsing for partially corrupted PDFs
-   - Selective OCR for problematic pages
-
-3. **Full OCR Processing** (Tesseract)
-   - Converts PDF pages to images
-   - Handles completely scanned documents
+   - Intelligent per-page OCR when text extraction is insufficient
 
 ### Language Support
 
