@@ -4,11 +4,18 @@ A multilingual Retrieval-Augmented Generation (RAG) system for searching and ans
 
 ## 🚀 Quick Start
 
+### Local Deployment
 ```bash
-# Clone and deploy
 git clone https://github.com/nomad-dormouse/rag-for-standards.git
 cd rag-for-standards
+cp .env.template .env
+# Edit .env with your configuration
 ./deploy.sh
+```
+
+### Remote Deployment
+```bash
+./deploy_remotely.sh
 ```
 
 ## 📁 Project Structure
@@ -33,17 +40,6 @@ rag-for-standards/
 ├── deploy_remotely.sh       # Remote deployment script
 └── .env                     # Environment configuration
 ```
-
-## 🛠️ Configuration
-
-```bash
-cp .env.template .env
-# Edit .env with your OpenAI API key
-```
-
-**Required:**
-- `OPENAI_API_KEY`: Your OpenAI API key
-- `WEBAPP_PORT`: Port for web interface (default: 8501)
 
 ## 📊 Features
 
@@ -78,10 +74,3 @@ cp .env.template .env
 After deployment:
 - **Local**: http://localhost:8501
 - **Remote**: http://your-server-ip:8501
-
-## 🔍 Usage
-
-1. **Choose Language**: Click 🇬🇧 English or 🇺🇦 Українська
-2. **Ask Questions**: Enter queries about technical standards
-3. **Compare Responses**: See answers with/without standards access
-4. **Review Sources**: View retrieved document chunks
