@@ -43,22 +43,24 @@ ssh -t -i "${SSH_KEY}" "${REMOTE_USER}@${REMOTE_HOST}" << EOF
     if [[ -d "${REMOTE_DIR}" ]]; then
         echo -e "${YELLOW}Repository found, updating...${NC}"
         cd "${REMOTE_DIR}"
-        export GIT_LFS_SKIP_SMUDGE=1
         if git fetch origin && git reset --hard origin/main; then
             echo -e "${GREEN}Repository updated successfully${NC}"
-            unset GIT_LFS_SKIP_SMUDGE
+            echo -e "${BLUE}Downloading Git LFS files (standards)...${NC}"
+            git lfs pull
+            echo -e "${GREEN}Standards updated successfully${NC}"
         else
-            unset GIT_LFS_SKIP_SMUDGE
             echo -e "${YELLOW}Git update failed, removing corrupted repository and re-cloning...${NC}"
             cd ..
             rm -rf "${REMOTE_DIR}"
-            GIT_LFS_SKIP_SMUDGE=1 git clone "${REPO_URL}" && \
-            cd "${REMOTE_DIR}"
+            git clone "${REPO_URL}" && \
+            cd "${REMOTE_DIR}" && \
+            git lfs pull
         fi
     else
-        echo -e "${YELLOW}Repository not found, cloning (skipping LFS files)...${NC}"
-        GIT_LFS_SKIP_SMUDGE=1 git clone "${REPO_URL}" && \
-        cd "${REMOTE_DIR}"
+        echo -e "${YELLOW}Repository not found, cloning with LFS files...${NC}"
+        git clone "${REPO_URL}" && \
+        cd "${REMOTE_DIR}" && \
+        git lfs pull
     fi
     
     echo -e "\n${BLUE}Copying .env file to project directory...${NC}"

@@ -15,7 +15,7 @@ def main():
     """
     Main ingestion pipeline that orchestrates parsing and embedding stages.
     """
-    load_dotenv()
+    load_dotenv(override=True)
     print("Starting document ingestion pipeline...")
     standards_dir = os.getenv("STANDARDS_DIR_NAME")
     index_dir = os.getenv("INDEX_DIR_NAME")
@@ -33,7 +33,10 @@ Configuration:
   Index directory: {index_dir}
   Embedding model: {embedding_model_name}
   Min text threshold: {min_text_threshold}
-  Parsed pages file: {parsed_pages_file}""")
+  Parsing statistics file: {parsing_statistics_file}
+  Parsing methods file: {parsing_methods_file}
+  Parsed pages file: {parsed_pages_file}
+  Embedding statistics file: {embedding_statistics_file}""")
     
     # Check if parsed pages already exist
     if parsed_pages_file and os.path.exists(parsed_pages_file):
