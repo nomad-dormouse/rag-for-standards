@@ -94,7 +94,8 @@ def parse_document_with_fallback(document_path: str, min_text_threshold: int) ->
     statuses={
         "default": "ParsedWithDefaultReader",
         "pymupdf": "ParsedWithPyMuPDF",
-        "ocr": "ParsedWithPyMuPDFAndOCR",
+        "ocr": "ParsedWithOCR",
+        "pymupdf_and_ocr": "ParsedWithPyMuPDFAndOCR",
         "failed": "FailedToParse"
     }
     print(f"Processing: {os.path.basename(document_path)}")
@@ -102,6 +103,9 @@ def parse_document_with_fallback(document_path: str, min_text_threshold: int) ->
     # Strategy 1: Try LlamaIndex SimpleDirectoryReader (works for PDF, DOC, DOCX)
     file_pages, error_message = extract_text_with_default_reader(document_path, min_text_threshold)
     if file_pages:
+        # Set extraction method metadata for pages processed with default reader
+        for page in file_pages:
+            page.metadata['extraction_method'] = statuses['default']
         return file_pages, statuses['default'], None
     
     # For PDF files only, try additional fallback strategy
@@ -114,9 +118,14 @@ def parse_document_with_fallback(document_path: str, min_text_threshold: int) ->
         if pymupdf_pages and len(pymupdf_pages) > 0:
             total_text = sum(len(page.text.strip()) for page in pymupdf_pages)
             if total_text > min_text_threshold:
-                # Check if any page used OCR
-                used_ocr = any(page.metadata.get('extraction_method') == 'PyMuPDFAndOCR' for page in pymupdf_pages)
-                status = statuses['ocr'] if used_ocr else statuses['pymupdf']
+                # Check OCR usage across all pages
+                ocr_pages = [page for page in pymupdf_pages if page.metadata.get('extraction_method') == statuses['ocr']]
+                if len(ocr_pages) == len(pymupdf_pages):
+                    status = statuses['ocr']
+                elif len(ocr_pages) > 0:
+                    status = statuses['pymupdf_and_ocr']
+                else:
+                    status = statuses['pymupdf']
                 return pymupdf_pages, status, None
         
         # All strategies failed
@@ -163,6 +172,11 @@ def calculate_statistics(files: list[dict], all_pages_length: int, successfully_
                     'percentage': 0,
                     'files': []
                 },
+                'ParsedWithOCR': {
+                    'count': 0,
+                    'percentage': 0,
+                    'files': []
+                },
                 'ParsedWithPyMuPDFAndOCR': {
                     'count': 0,
                     'percentage': 0,
@@ -197,9 +211,11 @@ def calculate_statistics(files: list[dict], all_pages_length: int, successfully_
     parsing_results_statistics['files_statistics']['files']['ParsedWithDefaultReader']['percentage'] = (parsing_results_statistics['files_statistics']['files']['ParsedWithDefaultReader']['count'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0
     parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['count'] = len(parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['files'])
     parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['percentage'] = (parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['count'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0
+    parsing_results_statistics['files_statistics']['files']['ParsedWithOCR']['count'] = len(parsing_results_statistics['files_statistics']['files']['ParsedWithOCR']['files'])
+    parsing_results_statistics['files_statistics']['files']['ParsedWithOCR']['percentage'] = (parsing_results_statistics['files_statistics']['files']['ParsedWithOCR']['count'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0
     parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['count'] = len(parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['files'])
     parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['percentage'] = (parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['count'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0
-    parsing_results_statistics['files_statistics']['parsed_successfully'] = parsing_results_statistics['files_statistics']['files']['ParsedWithDefaultReader']['count'] + parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['count'] + parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['count']
+    parsing_results_statistics['files_statistics']['parsed_successfully'] = parsing_results_statistics['files_statistics']['files']['ParsedWithDefaultReader']['count'] + parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['count'] + parsing_results_statistics['files_statistics']['files']['ParsedWithOCR']['count'] + parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['count']
     parsing_results_statistics['files_statistics']['parsed_successfully_percentage'] = (parsing_results_statistics['files_statistics']['parsed_successfully'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0
     parsing_results_statistics['files_statistics']['files']['FailedToParse']['count'] = len(parsing_results_statistics['files_statistics']['files']['FailedToParse']['files'])
     parsing_results_statistics['files_statistics']['files']['FailedToParse']['percentage'] = (parsing_results_statistics['files_statistics']['files']['FailedToParse']['count'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0
@@ -223,8 +239,9 @@ Files statistics:
   - DOCX files: {parsing_results_statistics['files_statistics']['total_docx_loaded']:,}
 ✅ Files successfully parsed: {parsing_results_statistics['files_statistics']['parsed_successfully']:,} files ({parsing_results_statistics['files_statistics']['parsed_successfully_percentage']:.1f}%)
    - With Default Reader: {parsing_results_statistics['files_statistics']['files']['ParsedWithDefaultReader']['count']:,} files ({parsing_results_statistics['files_statistics']['files']['ParsedWithDefaultReader']['percentage']:.1f}%)
-   - With PyMuPDF: {parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['count']:,} files ({parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['percentage']:.1f}%)
-   - With PyMuPDF and OCR: {parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['count']:,} files ({parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['percentage']:.1f}%)
+   - With only PyMuPDF: {parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['count']:,} files ({parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['percentage']:.1f}%)
+   - With only OCR: {parsing_results_statistics['files_statistics']['files']['ParsedWithOCR']['count']:,} files ({parsing_results_statistics['files_statistics']['files']['ParsedWithOCR']['percentage']:.1f}%)
+   - With both PyMuPDF and OCR: {parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['count']:,} files ({parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['percentage']:.1f}%)
 ❌ Files failed to parse: {parsing_results_statistics['files_statistics']['files']['FailedToParse']['count']:,} files ({parsing_results_statistics['files_statistics']['files']['FailedToParse']['percentage']:.1f}%)
 
 Pages statistics:
