@@ -87,12 +87,12 @@ if search_clicked and query.strip():
                 combined_sources += f"📄 {t('source_label')} {source['chunk_id']} ({t('similarity_label')}: {source['score']:.3f})\n"
                 if source["metadata"]:
                     metadata = source["metadata"]
-                    if "file_name" in metadata:
-                        combined_sources += f"📁 {t('file_label')}: {metadata['file_name']}\n"
-                    if "page_label" in metadata:
-                        combined_sources += f"📄 {t('page_label')}: {metadata['page_label']}\n"
+                    if "file_path" in metadata:
+                        combined_sources += f"📁 {t('file_label')}: {os.path.basename(metadata['file_path'])}\n"
+                    if "page_number" in metadata:
+                        combined_sources += f"📄 {t('page_label')}: {metadata['page_number']}\n"
                 if source["text"].strip():
-                    combined_sources += f"\n📝 {t('content_label')}:\n{source['text']}\n\n"
+                    combined_sources += f"📝 {t('content_label')}:\n{source['text']}\n\n"
                 else:
                     combined_sources += f"⚠️ {t('no_text_content_warning')}\n\n"
             st.text_area(

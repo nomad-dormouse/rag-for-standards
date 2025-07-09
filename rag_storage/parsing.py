@@ -9,7 +9,6 @@ Saves parsing results statistics to JSON, used parsing methods to CSV, and parse
 import os
 import io
 import json
-import csv
 import pickle
 import fitz
 from contextlib import redirect_stderr
@@ -106,6 +105,9 @@ def parse_document_with_fallback(document_path: str, min_text_threshold: int) ->
         # Set extraction method metadata for pages processed with default reader
         for page in file_pages:
             page.metadata['extraction_method'] = statuses['default']
+            # Ensure consistent metadata keys
+            if 'file_path' not in page.metadata:
+                page.metadata['file_path'] = document_path
         return file_pages, statuses['default'], None
     
     # For PDF files only, try additional fallback strategy
@@ -208,25 +210,25 @@ def calculate_statistics(files: list[dict], all_pages_length: int, successfully_
     
     # Calculate file statistics
     parsing_results_statistics['files_statistics']['files']['ParsedWithDefaultReader']['count'] = len(parsing_results_statistics['files_statistics']['files']['ParsedWithDefaultReader']['files'])
-    parsing_results_statistics['files_statistics']['files']['ParsedWithDefaultReader']['percentage'] = (parsing_results_statistics['files_statistics']['files']['ParsedWithDefaultReader']['count'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0
+    parsing_results_statistics['files_statistics']['files']['ParsedWithDefaultReader']['percentage'] = round((parsing_results_statistics['files_statistics']['files']['ParsedWithDefaultReader']['count'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100), 1) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0.0
     parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['count'] = len(parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['files'])
-    parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['percentage'] = (parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['count'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0
+    parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['percentage'] = round((parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['count'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100), 1) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0.0
     parsing_results_statistics['files_statistics']['files']['ParsedWithOCR']['count'] = len(parsing_results_statistics['files_statistics']['files']['ParsedWithOCR']['files'])
-    parsing_results_statistics['files_statistics']['files']['ParsedWithOCR']['percentage'] = (parsing_results_statistics['files_statistics']['files']['ParsedWithOCR']['count'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0
+    parsing_results_statistics['files_statistics']['files']['ParsedWithOCR']['percentage'] = round((parsing_results_statistics['files_statistics']['files']['ParsedWithOCR']['count'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100), 1) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0.0
     parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['count'] = len(parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['files'])
-    parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['percentage'] = (parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['count'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0
+    parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['percentage'] = round((parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['count'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100), 1) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0.0
     parsing_results_statistics['files_statistics']['parsed_successfully'] = parsing_results_statistics['files_statistics']['files']['ParsedWithDefaultReader']['count'] + parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDF']['count'] + parsing_results_statistics['files_statistics']['files']['ParsedWithOCR']['count'] + parsing_results_statistics['files_statistics']['files']['ParsedWithPyMuPDFAndOCR']['count']
-    parsing_results_statistics['files_statistics']['parsed_successfully_percentage'] = (parsing_results_statistics['files_statistics']['parsed_successfully'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0
+    parsing_results_statistics['files_statistics']['parsed_successfully_percentage'] = round((parsing_results_statistics['files_statistics']['parsed_successfully'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100), 1) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0.0
     parsing_results_statistics['files_statistics']['files']['FailedToParse']['count'] = len(parsing_results_statistics['files_statistics']['files']['FailedToParse']['files'])
-    parsing_results_statistics['files_statistics']['files']['FailedToParse']['percentage'] = (parsing_results_statistics['files_statistics']['files']['FailedToParse']['count'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0
+    parsing_results_statistics['files_statistics']['files']['FailedToParse']['percentage'] = round((parsing_results_statistics['files_statistics']['files']['FailedToParse']['count'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100), 1) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0.0
     parsing_results_statistics['files_statistics']['failed_to_parse'] = parsing_results_statistics['files_statistics']['files']['FailedToParse']['count']
-    parsing_results_statistics['files_statistics']['failed_to_parse_percentage'] = (parsing_results_statistics['files_statistics']['failed_to_parse'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0
+    parsing_results_statistics['files_statistics']['failed_to_parse_percentage'] = round((parsing_results_statistics['files_statistics']['failed_to_parse'] / parsing_results_statistics['files_statistics']['total_loaded'] * 100), 1) if parsing_results_statistics['files_statistics']['total_loaded'] > 0 else 0.0
     
     # Calculate page statistics
     parsing_results_statistics['pages_statistics']['not_empty'] = len(successfully_parsed_pages)
-    parsing_results_statistics['pages_statistics']['not_empty_percentage'] = (parsing_results_statistics['pages_statistics']['not_empty'] / parsing_results_statistics['pages_statistics']['total_loaded'] * 100) if parsing_results_statistics['pages_statistics']['total_loaded'] > 0 else 0
+    parsing_results_statistics['pages_statistics']['not_empty_percentage'] = round((parsing_results_statistics['pages_statistics']['not_empty'] / parsing_results_statistics['pages_statistics']['total_loaded'] * 100), 1) if parsing_results_statistics['pages_statistics']['total_loaded'] > 0 else 0.0
     parsing_results_statistics['pages_statistics']['empty'] = parsing_results_statistics['pages_statistics']['total_loaded'] - parsing_results_statistics['pages_statistics']['not_empty']
-    parsing_results_statistics['pages_statistics']['empty_percentage'] = (parsing_results_statistics['pages_statistics']['empty'] / parsing_results_statistics['pages_statistics']['total_loaded'] * 100) if parsing_results_statistics['pages_statistics']['total_loaded'] > 0 else 0
+    parsing_results_statistics['pages_statistics']['empty_percentage'] = round((parsing_results_statistics['pages_statistics']['empty'] / parsing_results_statistics['pages_statistics']['total_loaded'] * 100), 1) if parsing_results_statistics['pages_statistics']['total_loaded'] > 0 else 0.0
     
     # Generate report text
     parsing_results_statistics['report_text'] = f"""
@@ -252,8 +254,8 @@ Pages statistics:
     
     return parsing_results_statistics
 
-def save_parsing_results(files: list[dict], all_pages_length: int, successfully_parsed_pages: list, json_file: str, csv_file: str, pickle_file: str):
-    """Calculate statistics and save parsing results statistics to JSON file, CSV file, and parsed pages to pickle file."""
+def save_parsing_results(files: list[dict], all_pages_length: int, successfully_parsed_pages: list, json_file: str, pickle_file: str):
+    """Calculate statistics and save parsing results statistics to JSON file and parsed pages to pickle file."""
     # Calculate parsing results statistics
     parsing_results_statistics = calculate_statistics(files, all_pages_length, successfully_parsed_pages)
 
@@ -261,14 +263,6 @@ def save_parsing_results(files: list[dict], all_pages_length: int, successfully_
     with open(json_file, 'w', encoding='utf-8') as f:
         json.dump(parsing_results_statistics, f, indent=2, ensure_ascii=False, default=str)
     print(f"📊 Parsing results statistics saved to: {json_file}")
-    
-    # Save files processing methods to CSV file
-    with open(csv_file, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
-        writer.writerow(['File', 'Processing method'])
-        for file_info in files:
-            writer.writerow([file_info['file_path'], file_info['extraction_method']])
-    print(f"📁 Files parsing methods saved to: {csv_file}")
     
     # Save parsed pages to pickle file
     with open(pickle_file, 'wb') as f:
@@ -278,7 +272,7 @@ def save_parsing_results(files: list[dict], all_pages_length: int, successfully_
     # Display parsing report
     print(parsing_results_statistics['report_text'])
 
-def parse_all_documents(standards_dir: str, min_text_threshold: int, json_file: str, csv_file: str, pickle_file: str) -> list[Document]:
+def parse_all_documents(standards_dir: str, min_text_threshold: int, json_file: str, pickle_file: str) -> list[Document]:
     """Load and process document files from standards directory, save results, and return parsed pages."""
     files = load_all_documents(standards_dir)
     
@@ -296,6 +290,6 @@ def parse_all_documents(standards_dir: str, min_text_threshold: int, json_file: 
     print(f"Loaded {all_pages_length} pages from {len(files)} files")
     
     successfully_parsed_pages = [page for page in all_pages if len(page.text.strip()) > 0]
-    save_parsing_results(files, all_pages_length, successfully_parsed_pages, json_file, csv_file, pickle_file)
+    save_parsing_results(files, all_pages_length, successfully_parsed_pages, json_file, pickle_file)
 
     return successfully_parsed_pages

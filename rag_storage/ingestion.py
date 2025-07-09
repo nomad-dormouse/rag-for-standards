@@ -23,7 +23,6 @@ def main():
     min_text_threshold = int(os.getenv("MIN_TEXT_THRESHOLD"))
     delimiter_length = int(os.getenv("DELIMITER_LENGTH"))
     parsing_statistics_file = os.getenv("PARSING_RESULTS_STATISTICS_FILE_NAME")
-    parsing_methods_file = os.getenv("PARSING_METHODS_FILE_NAME")
     parsed_pages_file = os.getenv("PARSING_RESULTS_FILE_NAME")
     embedding_statistics_file = os.getenv("EMBEDDING_RESULTS_STATISTICS_FILE_NAME")
 
@@ -34,7 +33,6 @@ Configuration:
   Embedding model: {embedding_model_name}
   Min text threshold: {min_text_threshold}
   Parsing statistics file: {parsing_statistics_file}
-  Parsing methods file: {parsing_methods_file}
   Parsed pages file: {parsed_pages_file}
   Embedding statistics file: {embedding_statistics_file}""")
     
@@ -52,12 +50,12 @@ STAGE 1: LOADING EXISTING PARSED PAGES
             print(f"❌ Error loading existing parsed pages: {e}")
             print("   Falling back to parsing stage...")
             # Fall back to parsing
-            pages_for_indexing = parse_all_documents(standards_dir, min_text_threshold, parsing_statistics_file, parsing_methods_file, parsed_pages_file)
+            pages_for_indexing = parse_all_documents(standards_dir, min_text_threshold, parsing_statistics_file, parsed_pages_file)
     else:
         print(f"""
 STAGE 1: DOCUMENTS PARSING
 {'-' * delimiter_length}""")
-        pages_for_indexing = parse_all_documents(standards_dir, min_text_threshold, parsing_statistics_file, parsing_methods_file, parsed_pages_file)
+        pages_for_indexing = parse_all_documents(standards_dir, min_text_threshold, parsing_statistics_file, parsed_pages_file)
         
         if not pages_for_indexing:
             print("❌ No pages with content were found!\nIngestion pipeline failed at parsing stage.")

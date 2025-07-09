@@ -18,6 +18,20 @@ cp .env.template .env
 ./deploy_remotely.sh
 ```
 
+## 🔧 Deployment Options
+
+### Local Deployment
+```bash
+./deploy.sh                 # Deploy with existing parsed pages (if available)
+./deploy.sh parse           # Force re-parsing of all documents
+```
+
+### Remote Deployment
+```bash
+./deploy_remotely.sh        # Deploy to remote host with existing parsed pages
+./deploy_remotely.sh parse  # Deploy to remote host with forced re-parsing
+```
+
 ## 📁 Project Structure
 
 ```
@@ -48,6 +62,7 @@ rag-for-standards/
 - **Multilingual**: English, Ukrainian, Russian text recognition
 - **Bilingual Interface**: English 🇬🇧 and Ukrainian 🇺🇦
 - **Dual Response Mode**: Compare with/without standards access
+- **Flexible Deployment**: Optional forced re-parsing with `parse` flag
 - **Docker Containerisation**: Isolated services
 - **Modular Architecture**: Clean separation of parsing, embedding, and web interface
 

@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Local RAG system deployment script
+# Usage options:
+#   ./deploy.sh                 - Deploy with existing parsed pages (if available)
+#   ./deploy.sh parse           - Force re-parsing of all documents
+#   ./deploy.sh remotely        - Deploy to remote host with existing parsed pages (if available)
+#   ./deploy.sh parse remotely  - Deploy to remote host with forced re-parsing of all documents
+
 # Set error handling
 set -e
 trap 'echo -e "${RED}Deployment script terminated with error${NC}"; exit 1' ERR
@@ -16,6 +23,29 @@ else
 fi
 
 echo -e "${BLUE}Starting deployment for RAG system for Ukrainian technical standards...${NC}"
+
+# Check for parse argument to force re-parsing
+if [[ "$1" == "parse" ]] || [[ "$2" == "parse" ]]; then
+    echo -e "${BLUE}Parse flag detected - forcing re-parsing by removing existing parsing files...${NC}"
+    PARSING_RESULTS_FILE_PATH="${STORAGE_DIR_NAME}/${PARSING_RESULTS_FILE_NAME}"
+    PARSING_STATISTICS_FILE_PATH="${STORAGE_DIR_NAME}/${PARSING_RESULTS_STATISTICS_FILE_NAME}"
+    
+    # Remove pickle file with parsed pages
+    if [[ -f "${PARSING_RESULTS_FILE_PATH}" ]]; then
+        rm "${PARSING_RESULTS_FILE_PATH}"
+        echo -e "${GREEN}Removed existing pickle file with parsed pages: ${PARSING_RESULTS_FILE_PATH}${NC}"
+    else
+        echo -e "${YELLOW}No existing pickle file with parsed pages found at: ${PARSING_RESULTS_FILE_PATH}${NC}"
+    fi
+    
+    # Remove JSON file with parsing statistics
+    if [[ -f "${PARSING_STATISTICS_FILE_PATH}" ]]; then
+        rm "${PARSING_STATISTICS_FILE_PATH}"
+        echo -e "${GREEN}Removed existing JSON file with parsing statistics: ${PARSING_STATISTICS_FILE_PATH}${NC}"
+    else
+        echo -e "${YELLOW}No existing JSON file with parsing statistics found at: ${PARSING_STATISTICS_FILE_PATH}${NC}"
+    fi
+fi
 
 # Ensure Docker is running
 if ! docker info > /dev/null 2>&1; then
@@ -85,7 +115,7 @@ done
 
 # Set the host to localhost if running locally, or the remote host if running remotely
 HOST="localhost"
-if [[ "$1" == "remotely" ]]; then
+if [[ "$1" == "remotely" ]] || [[ "$2" == "remotely" ]]; then
     HOST=${REMOTE_HOST:-localhost}
 fi
 

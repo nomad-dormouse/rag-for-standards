@@ -115,10 +115,10 @@ def get_answer_with_RAG(query: str) -> dict:
             score = getattr(node, 'score', 0.0)
             source_header = f"{TRANSLATIONS['en']['source_label']} {i+1} ({TRANSLATIONS['en']['similarity_label']}: {score:.3f})"
             metadata_lines = []
-            if "file_name" in metadata:
-                metadata_lines.append(f"{TRANSLATIONS['en']['file_label']}: {metadata['file_name']}")
-            if "page_label" in metadata:
-                metadata_lines.append(f"{TRANSLATIONS['en']['page_label']}: {metadata['page_label']}")
+            if "file_path" in metadata:
+                metadata_lines.append(f"{TRANSLATIONS['en']['file_label']}: {os.path.basename(metadata['file_path'])}")
+            if "page_number" in metadata:
+                metadata_lines.append(f"{TRANSLATIONS['en']['page_label']}: {metadata['page_number']}")
             content_section = f"{TRANSLATIONS['en']['content_label']}:\n{node.text}"
             source_parts = [source_header] + metadata_lines + [content_section]
             context_parts.append("\n".join(source_parts))
