@@ -34,11 +34,27 @@ Storage format: LlamaIndex vector store
     # Save index
     print(f"Saving index to: {index_dir}...")
     try:
+        # Check if parent directory exists and create if needed
+        parent_dir = os.path.dirname(index_dir) if os.path.dirname(index_dir) else '.'
+        print(f"Parent directory: {parent_dir}")
+        print(f"Target index directory: {index_dir}")
+        
+        # Debug information
+        print(f"Parent directory exists: {os.path.exists(parent_dir)}")
+        print(f"Parent directory is writable: {os.access(parent_dir, os.W_OK)}")
+        print(f"Index directory exists: {os.path.exists(index_dir)}")
+        
         os.makedirs(index_dir, exist_ok=True)
+        print(f"Index directory created/verified: {index_dir}")
+        print(f"Index directory is writable: {os.access(index_dir, os.W_OK)}")
+        
         index.storage_context.persist(persist_dir=index_dir)
         print("Index stored successfully!")
     except Exception as e:
         print(f"Error saving index: {e}")
+        print(f"Error type: {type(e).__name__}")
+        import traceback
+        print(f"Full traceback:\n{traceback.format_exc()}")
         raise
     
     # Save embedding results statistics to JSON file

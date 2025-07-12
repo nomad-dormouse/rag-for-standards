@@ -82,7 +82,6 @@ docker image rm ${WEBAPP_IMAGE_NAME}:latest 2>/dev/null || true
 echo -e "${BLUE}Performing Docker system cleanup...${NC}"
 docker image prune -f 2>/dev/null || true
 docker builder prune -f 2>/dev/null || true
-docker volume prune -f 2>/dev/null || true
 
 # Run one-time standards ingestion service
 echo -e "${BLUE}Building and running standards ingestion service (one-time job)...${NC}"
