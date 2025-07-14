@@ -45,11 +45,9 @@ STAGE 1: LOADING EXISTING PARSED PAGES
             with open(parsed_pages_file, 'rb') as f:
                 pages_for_indexing = pickle.load(f)
             print(f"✅ Loaded {len(pages_for_indexing)} existing parsed pages from {parsed_pages_file}")
-            parsing_results = None  # No parsing results to display
         except Exception as e:
             print(f"❌ Error loading existing parsed pages: {e}")
             print("   Falling back to parsing stage...")
-            # Fall back to parsing
             pages_for_indexing = parse_all_documents(standards_dir, min_text_threshold, parsing_statistics_file, parsed_pages_file)
     else:
         print(f"""

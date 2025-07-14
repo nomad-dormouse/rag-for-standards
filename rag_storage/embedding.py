@@ -48,8 +48,28 @@ Storage format: LlamaIndex vector store
         print(f"Index directory created/verified: {index_dir}")
         print(f"Index directory is writable: {os.access(index_dir, os.W_OK)}")
         
-        index.storage_context.persist(persist_dir=index_dir)
-        print("Index stored successfully!")
+        # Check available memory before persist
+        import psutil
+        memory_info = psutil.virtual_memory()
+        print(f"Available memory before persist: {memory_info.available / (1024**3):.2f} GB ({memory_info.percent}% used)")
+        
+        # Force garbage collection to free memory
+        import gc
+        gc.collect()
+        
+        # Persist with error handling
+        try:
+            print("Starting index persistence...")
+            index.storage_context.persist(persist_dir=index_dir)
+            print("Index stored successfully!")
+        except Exception as persist_error:
+            print(f"PERSIST ERROR: {persist_error}")
+            print(f"PERSIST ERROR TYPE: {type(persist_error).__name__}")
+            
+            # Check memory again
+            memory_info = psutil.virtual_memory()
+            print(f"Memory after persist failure: {memory_info.available / (1024**3):.2f} GB ({memory_info.percent}% used)")
+            raise
     except Exception as e:
         print(f"Error saving index: {e}")
         print(f"Error type: {type(e).__name__}")
@@ -122,9 +142,20 @@ def build_index(pages_to_index: list, embedding_model: str, index_dir: str, embe
         raise
     
     print(f"Building index for {embedding_results_statistics['total_pages']} pages...")
+    
+    # Check memory before building index
+    import psutil
+    memory_info = psutil.virtual_memory()
+    print(f"Available memory before index building: {memory_info.available / (1024**3):.2f} GB ({memory_info.percent}% used)")
+    
     try:
         index = VectorStoreIndex.from_documents(pages_to_index)
         print(f"Index building completed!")
+        
+        # Check memory after building index
+        memory_info = psutil.virtual_memory()
+        print(f"Available memory after index building: {memory_info.available / (1024**3):.2f} GB ({memory_info.percent}% used)")
+        
     except Exception as e:
         print(f"Error building index: {e}")
         print(f"Error type: {type(e).__name__}")
