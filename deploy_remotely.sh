@@ -51,6 +51,23 @@ ssh -t -i "${SSH_KEY}" "${REMOTE_USER}@${REMOTE_HOST}" << EOF
     sudo apt-get autoremove -y && \
     sudo apt-get autoclean
     
+    echo -e "\n\${BLUE}Configuring swap space for memory-intensive operations...\${NC}"
+    if [[ \$(free -h | grep -i swap | awk '{print \$2}') == "0B" ]]; then
+        echo -e "\${YELLOW}No swap space found, creating 2GB swap file...\${NC}"
+        sudo fallocate -l 2G /swapfile
+        sudo chmod 600 /swapfile
+        sudo mkswap /swapfile
+        sudo swapon /swapfile
+        if ! grep -q '/swapfile' /etc/fstab; then
+            echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+        fi
+        echo -e "\${GREEN}Swap space created and activated\${NC}"
+        free -h
+    else
+        echo -e "\${GREEN}Swap space already configured\${NC}"
+        free -h
+    fi
+    
     echo -e "\n\${BLUE}Updating repository from ${REPO_URL}...\${NC}"
     if [[ -d "${REMOTE_DIR}" ]]; then
         echo -e "\${YELLOW}Repository found, updating...\${NC}"
