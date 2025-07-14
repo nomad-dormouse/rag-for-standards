@@ -82,26 +82,42 @@ def build_index(pages_to_index: list, embedding_model: str, index_dir: str, embe
     print(f"Working directory: {os.getcwd()}")
     
     try:
+        print("Attempting to load embedding model...")
         Settings.embed_model = HuggingFaceEmbedding(model_name=embedding_model)
         print("Embedding model loaded successfully!")
         embedding_results_statistics['embedding_dimensions'] = Settings.embed_model._model.get_sentence_embedding_dimension()
     except Exception as e:
-        print(f"Error loading embedding model: {e}")
+        print(f"❌ EMBEDDING MODEL LOADING FAILED ❌")
+        print(f"Error: {str(e)}")
         print(f"Error type: {type(e).__name__}")
         
         # Print more detailed error information
         import traceback
-        print("Full error traceback:")
+        print("\n" + "="*50)
+        print("FULL ERROR TRACEBACK:")
+        print("="*50)
         traceback.print_exc()
+        print("="*50)
         
         # Check if it's a network/download issue
         if "ConnectionError" in str(type(e)) or "timeout" in str(e).lower():
-            print("This appears to be a network connectivity issue.")
-            print("The model needs to be downloaded from HuggingFace on first use.")
+            print("\n💡 DIAGNOSIS: Network connectivity issue")
+            print("   - The model needs to be downloaded from HuggingFace on first use")
+            print("   - Check internet connection on remote server")
         elif "No space left on device" in str(e):
-            print("This appears to be a disk space issue.")
+            print("\n💡 DIAGNOSIS: Disk space issue")
+            print("   - Free up disk space on the remote server")
         elif "MemoryError" in str(type(e)) or "out of memory" in str(e).lower():
-            print("This appears to be a memory issue.")
+            print("\n💡 DIAGNOSIS: Memory issue")
+            print("   - Remote server needs more RAM")
+        else:
+            print(f"\n💡 DIAGNOSIS: Unknown error type: {type(e).__name__}")
+        
+        print("\n🔧 SUGGESTED FIXES:")
+        print("   1. Check remote server internet connection")
+        print("   2. Ensure sufficient disk space (>2GB free)")
+        print("   3. Ensure sufficient RAM (>2GB available)")
+        print("   4. Try running deployment again (model might download on retry)")
         
         raise
     

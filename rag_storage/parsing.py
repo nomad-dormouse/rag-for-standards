@@ -102,12 +102,12 @@ def parse_document_with_fallback(document_path: str, min_text_threshold: int) ->
     # Strategy 1: Try LlamaIndex SimpleDirectoryReader (works for PDF, DOC, DOCX)
     file_pages, error_message = extract_text_with_default_reader(document_path, min_text_threshold)
     if file_pages:
-        # Set extraction method metadata for pages processed with default reader
         for page in file_pages:
             page.metadata['extraction_method'] = statuses['default']
-            # Ensure consistent metadata keys
             if 'file_path' not in page.metadata:
                 page.metadata['file_path'] = document_path
+            if 'page_number' not in page.metadata:
+                page.metadata['page_number'] = file_pages.index(page) + 1
         return file_pages, statuses['default'], None
     
     # For PDF files only, try additional fallback strategy
