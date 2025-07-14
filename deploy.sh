@@ -87,8 +87,14 @@ docker builder prune -f 2>/dev/null || true
 echo -e "${BLUE}Building and running standards ingestion service (one-time job)...${NC}"
 docker-compose build ${STORAGE_SERVICE_NAME}
 docker-compose run --rm ${STORAGE_SERVICE_NAME} python ${INGESTION_FILE_NAME}
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Standards ingestion failed${NC}"
+INGESTION_EXIT_CODE=$?
+
+if [ $INGESTION_EXIT_CODE -ne 0 ]; then
+    echo -e "${RED}Standards ingestion failed with exit code: $INGESTION_EXIT_CODE${NC}"
+    echo -e "${YELLOW}System information:${NC}"
+    echo "Available memory: $(free -h | grep '^Mem:' | awk '{print $7}')"
+    echo "Available disk space: $(df -h . | tail -1 | awk '{print $4}')"
+    echo -e "${YELLOW}Check the error messages above for more details.${NC}"
     exit 1
 fi
 echo -e "${GREEN}Standards ingestion completed successfully${NC}"

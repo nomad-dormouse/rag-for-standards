@@ -76,12 +76,33 @@ def build_index(pages_to_index: list, embedding_model: str, index_dir: str, embe
     }
     
     print(f"Setting up embedding model: {embedding_model}...")
+    
+    # Basic system information
+    print(f"Python version: {__import__('sys').version}")
+    print(f"Working directory: {os.getcwd()}")
+    
     try:
         Settings.embed_model = HuggingFaceEmbedding(model_name=embedding_model)
         print("Embedding model loaded successfully!")
         embedding_results_statistics['embedding_dimensions'] = Settings.embed_model._model.get_sentence_embedding_dimension()
     except Exception as e:
         print(f"Error loading embedding model: {e}")
+        print(f"Error type: {type(e).__name__}")
+        
+        # Print more detailed error information
+        import traceback
+        print("Full error traceback:")
+        traceback.print_exc()
+        
+        # Check if it's a network/download issue
+        if "ConnectionError" in str(type(e)) or "timeout" in str(e).lower():
+            print("This appears to be a network connectivity issue.")
+            print("The model needs to be downloaded from HuggingFace on first use.")
+        elif "No space left on device" in str(e):
+            print("This appears to be a disk space issue.")
+        elif "MemoryError" in str(type(e)) or "out of memory" in str(e).lower():
+            print("This appears to be a memory issue.")
+        
         raise
     
     print(f"Building index for {embedding_results_statistics['total_pages']} pages...")
@@ -90,6 +111,9 @@ def build_index(pages_to_index: list, embedding_model: str, index_dir: str, embe
         print(f"Index building completed!")
     except Exception as e:
         print(f"Error building index: {e}")
+        print(f"Error type: {type(e).__name__}")
+        import traceback
+        traceback.print_exc()
         raise
     
     save_embedding_results(index, embedding_results_statistics, index_dir, embedding_results_file)
